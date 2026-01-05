@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["bimfx"]
+
+[project]
+name = "bimfx"
+version = "0.1.0"
+description = "Laplce solvers with the Method of Fundamental Solutions (MFS) and Boundary Integral Methods (BIM) using JAX."
+readme = "README.md"
+authors = [
+  { name = "UWPlasma Group", email = "rogerio.jorge@wisc.edu" }
+]
+license = { text = "MIT" }
+dependencies = [
+  # JAX and its runtime
+  "jax",
+  "jaxlib",
+  # Base numerical dependency
+  "numpy >= 1.20",
+  # Matplotlib and Plotly are required for plotting utilities
+  "matplotlib >= 3.5",
+]
+requires-python = ">=3.8"
+
+[project.urls]
+Homepage = "https://github.com/uwplasma/BIMFx"
+Repository = "https://github.com/uwplasma/BIMFx"
