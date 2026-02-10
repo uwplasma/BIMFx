@@ -44,3 +44,40 @@ Requires:
 pip install "bimfx[fci]"
 ```
 
+## Flux-surface workflows
+
+```python
+from bimfx.fci import fit_flux_surfaces, analyze_flux_surfaces
+
+# Fit isosurfaces
+fits = fit_flux_surfaces(sol.psi, sol.xs, sol.ys, sol.zs, levels=[0.2, 0.4, 0.6])
+
+# Analyze: field-line traces, Poincare sections, psi(R,Z) slices
+analysis = analyze_flux_surfaces(
+    B,
+    sol.psi,
+    sol.xs,
+    sol.ys,
+    sol.zs,
+    P=P,
+    N=N,
+    poincare_phi_planes=[0.0, 0.5],
+    ds=0.02,
+    n_steps=1500,
+)
+```
+
+## Poincare overlays + psi(s)
+
+```python
+from bimfx.fci import plot_poincare_overlays, plot_psi_along_fieldlines
+
+plot_poincare_overlays(analysis.poincare, analysis.psi_slices)
+plot_psi_along_fieldlines(analysis.s, analysis.psi_along)
+```
+
+Requires:
+
+```bash
+pip install "bimfx[plot]"
+```

@@ -84,7 +84,8 @@ See `docs/tracing.md`.
 
 ## Flux-Surface Finding (FCI)
 
-An FCI-inspired anisotropic diffusion solver is available in `bimfx.fci`.
+An FCI-inspired anisotropic diffusion solver is available in `bimfx.fci`, along with
+high-level workflows for fitting flux surfaces and analyzing Poincare overlays.
 See `docs/fci.md`.
 
 ## Documentation

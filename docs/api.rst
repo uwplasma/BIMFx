@@ -25,6 +25,16 @@ Public interface
    bimfx.fci.field_alignment_error
    bimfx.fci.extract_isosurfaces
    bimfx.fci.sample_psi_along_fieldlines
+   bimfx.fci.fit_flux_surfaces
+   bimfx.fci.seed_from_boundary
+   bimfx.fci.compute_psi_rz_slices
+   bimfx.fci.analyze_flux_surfaces
+   bimfx.fci.FluxSurface
+   bimfx.fci.PsiSlice
+   bimfx.fci.FluxSurfaceAnalysis
+   bimfx.fci.plot_psi_along_fieldlines
+   bimfx.fci.plot_poincare_with_psi_contours
+   bimfx.fci.plot_poincare_overlays
    bimfx.fci.FCISolution
 
 Utilities
