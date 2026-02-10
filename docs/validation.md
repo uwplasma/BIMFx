@@ -6,6 +6,12 @@ helpers you can reuse in your own workflows.
 ## Boundary condition residuals
 
 For a vacuum field `B = ∇φ`, BIMFx enforces `n·B = 0` on the boundary.
+For BIM, evaluate `B` slightly inside the domain (offset along `-n`)
+to avoid near-singular evaluation exactly on Γ.
+
+```{math}
+r_n = \frac{|n \cdot B|}{\|B\|}
+```
 
 ```python
 import numpy as np
@@ -16,6 +22,10 @@ print("RMS n·B/|B|:", np.sqrt(np.mean(res**2)))
 ```
 
 ## Divergence-free check
+
+```{math}
+r_{\nabla\cdot B} = \nabla \cdot B
+```
 
 ```python
 from bimfx.validation import divergence_on_grid, summary_stats
@@ -40,3 +50,7 @@ print(stats["divergence"])
 - Report RMS of `∇·B` on an interior grid.
 - For toroidal cases, report sensitivity to `k_nn`, `lambda_reg`, and source placement.
 - For MFS vs BIM, compare `B` on a fixed probe set.
+
+## Source code
+
+- Validation helpers: [src/bimfx/validation.py](https://github.com/uwplasma/BIMFx/blob/main/src/bimfx/validation.py)

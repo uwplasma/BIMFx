@@ -2,6 +2,10 @@
 
 The tracing tools operate on a user-supplied magnetic field callable `B(X)`.
 
+```{math}
+\frac{d x}{d s} = B(x), \qquad x(0) = x_0
+```
+
 ## Trace field lines
 
 ```python

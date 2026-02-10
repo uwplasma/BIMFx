@@ -23,6 +23,8 @@ tracing
 fci
 validation
 performance
+examples
+references
 api
 roadmap
 ```

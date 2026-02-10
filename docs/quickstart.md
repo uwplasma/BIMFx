@@ -39,6 +39,22 @@ data = boundary_from_vmec_wout("wout_precise_QA.nc", s=1.0, ntheta=64, nphi=128)
 field = solve_mfs(data.points, data.normals, toroidal_flux=1.0)
 ```
 
+## Try the bundled datasets
+
+```bash
+# Knot example
+JAX_ENABLE_X64=1 python examples/solve_vacuum_from_csv.py --method mfs --xyz inputs/knot_tube.csv --normals inputs/knot_tube_normals.csv --subsample 200
+
+# VMEC wout example
+JAX_ENABLE_X64=1 python examples/solve_from_vmec_wout.py --wout inputs/wout_precise_QA.nc --method bim
+```
+
+Compare MFS vs BIM across datasets:
+
+```bash
+JAX_ENABLE_X64=1 python examples/compare_mfs_bim_inputs.py
+```
+
 ## CLI-style example script
 
 ```bash

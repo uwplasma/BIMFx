@@ -4,6 +4,14 @@ This module implements a **flux-coordinate independent (FCI)-inspired** solver f
 flux-like scalar `psi` by solving a strongly anisotropic diffusion problem aligned
 with the vacuum field `B = ∇φ`.
 
+```{math}
+\nabla \cdot (D \nabla \psi) = 0, \qquad
+D = \epsilon_\perp I + (1-\epsilon_\perp)\, t t^\top, \quad t = B/\|B\|.
+```
+
+For background on FCI approaches, see Harvey et al. (2013),
+[DOI: 10.1016/j.cpc.2013.06.005](https://doi.org/10.1016/j.cpc.2013.06.005).
+
 ## Solve for `psi`
 
 ```python

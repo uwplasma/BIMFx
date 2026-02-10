@@ -95,6 +95,11 @@ See `docs/fci.md`.
 Validation helpers for boundary residuals and divergence checks are in
 `bimfx.validation`. See `docs/validation.md`.
 
+## Examples and datasets
+
+Example scripts live in `examples/`, with bundled input datasets in `inputs/`.
+See `docs/examples.md` and `docs/io.md`.
+
 ## Documentation
 
 Documentation lives in `docs/` and is set up for ReadTheDocs.

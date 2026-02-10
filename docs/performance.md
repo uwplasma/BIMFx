@@ -6,6 +6,7 @@ This page summarizes performance characteristics and recommended settings.
 
 - `trace_fieldlines_rk4` (NumPy) is fine for small batches.
 - `trace_fieldlines_rk4_jax` can be much faster for large batches and supports GPU/TPU.
+  For JAX usage, `B` must be JAX-compatible.
 
 ## MFS/BIM solvers
 
@@ -17,3 +18,7 @@ This page summarizes performance characteristics and recommended settings.
 
 - The sparse CG solve scales with grid size; start with coarse grids (32–64).
 - Reduce `eps_perp` to sharpen surfaces, but expect slower convergence.
+
+## Source code
+
+- Tracing backends: [src/bimfx/tracing.py](https://github.com/uwplasma/BIMFx/blob/main/src/bimfx/tracing.py)
