@@ -88,6 +88,11 @@ An FCI-inspired anisotropic diffusion solver is available in `bimfx.fci`, along 
 high-level workflows for fitting flux surfaces and analyzing Poincare overlays.
 See `docs/fci.md`.
 
+## Validation
+
+Validation helpers for boundary residuals and divergence checks are in
+`bimfx.validation`. See `docs/validation.md`.
+
 ## Documentation
 
 Documentation lives in `docs/` and is set up for ReadTheDocs.

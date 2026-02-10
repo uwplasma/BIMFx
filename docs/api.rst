@@ -36,6 +36,10 @@ Public interface
    bimfx.fci.plot_poincare_with_psi_contours
    bimfx.fci.plot_poincare_overlays
    bimfx.fci.FCISolution
+   bimfx.validation.boundary_normal_residual
+   bimfx.validation.divergence_on_grid
+   bimfx.validation.summary_stats
+   bimfx.validation.validate_vacuum_field
 
 Utilities
 ---------
