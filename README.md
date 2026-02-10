@@ -77,6 +77,11 @@ BIMFx includes utilities to load boundary point clouds from common sources:
 
 See `docs/io.md` and `examples/convert_boundary.py`.
 
+## Field-Line Tracing
+
+Field-line tracing and Poincare section tools are available in `bimfx.tracing`.
+See `docs/tracing.md`.
+
 ## Documentation
 
 Documentation lives in `docs/` and is set up for ReadTheDocs.
