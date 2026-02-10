@@ -30,9 +30,17 @@ field = solve_mfs(P, N, toroidal_flux=1.0)
 B = field.B(P)  # (N,3)
 ```
 
+## Load boundary from common sources
+
+```python
+from bimfx.io import boundary_from_vmec_wout
+
+data = boundary_from_vmec_wout("wout_precise_QA.nc", s=1.0, ntheta=64, nphi=128)
+field = solve_mfs(data.points, data.normals, toroidal_flux=1.0)
+```
+
 ## CLI-style example script
 
 ```bash
 JAX_ENABLE_X64=1 python examples/solve_vacuum_from_csv.py --method mfs --xyz inputs/knot_tube.csv --normals inputs/knot_tube_normals.csv --subsample 200
 ```
-

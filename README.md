@@ -66,6 +66,17 @@ There is also a small runnable example:
 JAX_ENABLE_X64=1 python examples/solve_vacuum_from_csv.py --help
 ```
 
+## Boundary I/O
+
+BIMFx includes utilities to load boundary point clouds from common sources:
+
+- VMEC `wout*.nc`
+- SLAM `.npz`
+- SFLM `.npy`
+- STL meshes (optional; requires `trimesh`)
+
+See `docs/io.md` and `examples/convert_boundary.py`.
+
 ## Documentation
 
 Documentation lives in `docs/` and is set up for ReadTheDocs.
@@ -88,4 +99,3 @@ make html
 ## License
 
 MIT. See `LICENSE`.
-

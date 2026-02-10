@@ -18,7 +18,7 @@ inside a closed surface, enforcing the flux-surface / perfect-conductor boundary
 
 quickstart
 theory
+io
 api
 roadmap
 ```
-

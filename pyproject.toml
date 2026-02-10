@@ -29,6 +29,7 @@ requires-python = ">=3.8"
 plot = ["matplotlib>=3.5"]
 dev = ["pytest>=7", "ruff>=0.1.0"]
 docs = ["sphinx>=7", "furo>=2024.1.29", "myst-parser>=2.0.0", "sphinx-autodoc-typehints>=1.25.0"]
+io = ["trimesh>=4.0.0"]
 
 [project.urls]
 Homepage = "https://github.com/uwplasma/BIMFx"

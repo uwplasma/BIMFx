@@ -4,6 +4,18 @@ import os
 os.environ.setdefault("JAX_ENABLE_X64", "1")
 
 import numpy as np
+import pytest
+
+
+def _require_x64() -> None:
+    import jax
+
+    try:
+        jax.config.update("jax_enable_x64", True)
+    except Exception:
+        pass
+    if not jax.config.jax_enable_x64:
+        pytest.skip("JAX 64-bit mode is required for BIMFx solver tests.")
 
 
 def _torus_point_cloud(R: float, r: float, nphi: int, ntheta: int) -> tuple[np.ndarray, np.ndarray]:
@@ -27,6 +39,7 @@ def _torus_point_cloud(R: float, r: float, nphi: int, ntheta: int) -> tuple[np.n
 
 
 def test_mfs_blob_returns_zero_field():
+    _require_x64()
     from bimfx import solve_mfs
 
     rng = np.random.default_rng(0)
@@ -41,6 +54,7 @@ def test_mfs_blob_returns_zero_field():
 
 
 def test_mfs_torus_enforces_tangency():
+    _require_x64()
     from bimfx import solve_mfs
 
     P, N = _torus_point_cloud(R=3.0, r=1.0, nphi=10, ntheta=10)
@@ -53,6 +67,7 @@ def test_mfs_torus_enforces_tangency():
 
 
 def test_bim_torus_enforces_tangency():
+    _require_x64()
     from bimfx import solve_bim
 
     P, N = _torus_point_cloud(R=3.0, r=1.0, nphi=10, ntheta=10)
@@ -62,4 +77,3 @@ def test_bim_torus_enforces_tangency():
     B = np.asarray(field.B(Pin))
     ndot = np.sum(N * B, axis=1)
     assert np.sqrt(np.mean(ndot**2)) < 1e-10
-
