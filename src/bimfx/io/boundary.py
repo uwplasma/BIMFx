@@ -93,6 +93,17 @@ def boundary_from_vmec_wout(
         rmns = np.zeros_like(rmnc)
         zmnc = np.zeros_like(rmnc)
 
+    def _ensure_mnmax_ns(arr: np.ndarray, ns_val: int) -> np.ndarray:
+        arr = np.asarray(arr)
+        if arr.ndim == 2 and arr.shape[0] == ns_val and arr.shape[1] != ns_val:
+            return arr.T
+        return arr
+
+    rmnc = _ensure_mnmax_ns(rmnc, ns)
+    rmns = _ensure_mnmax_ns(rmns, ns)
+    zmns = _ensure_mnmax_ns(zmns, ns)
+    zmnc = _ensure_mnmax_ns(zmnc, ns)
+
     theta = np.linspace(0.0, 2.0 * np.pi, num=int(ntheta))
     phi = np.linspace(0.0, 2.0 * np.pi, num=int(nphi))
     theta2d, phi2d = np.meshgrid(theta, phi, indexing="ij")
