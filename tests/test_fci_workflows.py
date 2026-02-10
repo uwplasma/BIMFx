@@ -1,3 +1,7 @@
+import os
+
+os.environ.setdefault("JAX_ENABLE_X64", "1")
+
 import numpy as np
 
 import pytest
@@ -16,6 +20,13 @@ def _sphere_points(n: int = 400) -> tuple[np.ndarray, np.ndarray]:
 def _B_helical(points: np.ndarray) -> np.ndarray:
     x, y, z = points[:, 0], points[:, 1], points[:, 2]
     return np.stack([-y, x, 0.2 * np.ones_like(z)], axis=1)
+
+
+def _B_helical_jax(points):
+    import jax.numpy as jnp
+
+    x, y, z = points[:, 0], points[:, 1], points[:, 2]
+    return jnp.stack([-y, x, 0.2 * jnp.ones_like(z)], axis=1)
 
 
 def test_fit_flux_surfaces_sphere():
@@ -41,7 +52,7 @@ def test_analyze_flux_surfaces_shapes():
 
     P, N = _sphere_points(300)
     analysis = analyze_flux_surfaces(
-        _B_helical,
+        _B_helical_jax,
         psi,
         xs,
         ys,
@@ -54,6 +65,7 @@ def test_analyze_flux_surfaces_shapes():
         poincare_phi_planes=[0.0, 0.7],
         slice_n_r=48,
         slice_n_z=48,
+        trace_backend="jax",
     )
 
     assert analysis.psi_along.shape[0] == 6

@@ -67,6 +67,61 @@ def trace_fieldlines_rk4(
     return FieldlineTrace(trajectories=traj, step=float(ds), normalize=bool(normalize))
 
 
+def trace_fieldlines_rk4_jax(
+    B: Callable[[Array], Array],
+    seeds: Array,
+    *,
+    ds: float,
+    n_steps: int,
+    normalize: bool = True,
+    return_jax: bool = False,
+) -> FieldlineTrace:
+    """Trace field lines with RK4 using JAX and `lax.scan`."""
+    try:
+        import jax
+        import jax.numpy as jnp
+    except Exception as exc:  # pragma: no cover
+        raise ImportError("JAX is required for the JAX tracing backend.") from exc
+
+    seeds_j = jnp.asarray(seeds, dtype=jnp.float64)
+    if seeds_j.ndim == 1:
+        seeds_j = seeds_j[None, :]
+    if seeds_j.shape[1] != 3:
+        raise ValueError(f"Expected seeds shape (N,3); got {seeds_j.shape}")
+
+    def eval_B(points):
+        return jnp.asarray(B(points))
+
+    def rhs(points):
+        v = eval_B(points)
+        if v.shape == (3,):
+            v = v[None, :]
+        if not normalize:
+            return v
+        nrm = jnp.linalg.norm(v, axis=1, keepdims=True)
+        return v / jnp.maximum(1e-30, nrm)
+
+    def step(x, _):
+        k1 = rhs(x)
+        k2 = rhs(x + 0.5 * ds * k1)
+        k3 = rhs(x + 0.5 * ds * k2)
+        k4 = rhs(x + ds * k3)
+        x_next = x + (ds / 6.0) * (k1 + 2 * k2 + 2 * k3 + k4)
+        return x_next, x_next
+
+    x0 = seeds_j
+    _, traj = jax.lax.scan(step, x0, xs=None, length=n_steps)
+    traj = jnp.concatenate([x0[None, ...], traj], axis=0)
+    traj = jnp.transpose(traj, (1, 0, 2))
+
+    if return_jax:
+        traj_out = traj
+    else:
+        traj_out = np.asarray(traj)
+
+    return FieldlineTrace(trajectories=traj_out, step=float(ds), normalize=bool(normalize))
+
+
 @dataclass(frozen=True)
 class PoincareSection:
     """Poincare R–Z intersection points at specified toroidal angles."""
@@ -148,4 +203,3 @@ def poincare_sections(
         plane_index = np.asarray(plane_idx, dtype=int)
 
     return PoincareSection(R=R, Z=Z, seed_index=seed_index, plane_index=plane_index, phi_planes=phi_planes)
-

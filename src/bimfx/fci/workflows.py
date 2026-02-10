@@ -7,7 +7,13 @@ import numpy as np
 from scipy.interpolate import RegularGridInterpolator
 
 from bimfx.fci.surfaces import extract_isosurfaces
-from bimfx.tracing import FieldlineTrace, PoincareSection, poincare_sections, trace_fieldlines_rk4
+from bimfx.tracing import (
+    FieldlineTrace,
+    PoincareSection,
+    poincare_sections,
+    trace_fieldlines_rk4,
+    trace_fieldlines_rk4_jax,
+)
 
 
 @dataclass(frozen=True)
@@ -188,6 +194,7 @@ def analyze_flux_surfaces(
     slice_n_r: int = 200,
     slice_n_z: int = 200,
     slice_margin: float = 0.05,
+    trace_backend: str = "numpy",
 ) -> FluxSurfaceAnalysis:
     """Run a full analysis pass: field-line trace, Poincare, psi slices."""
     if seeds is None:
@@ -195,7 +202,10 @@ def analyze_flux_surfaces(
             raise ValueError("Provide seeds or boundary points P for default seeding.")
         seeds = seed_from_boundary(P, N, n_seed=n_seed)
 
-    trace = trace_fieldlines_rk4(B, seeds, ds=ds, n_steps=n_steps, normalize=normalize)
+    if trace_backend == "jax":
+        trace = trace_fieldlines_rk4_jax(B, seeds, ds=ds, n_steps=n_steps, normalize=normalize)
+    else:
+        trace = trace_fieldlines_rk4(B, seeds, ds=ds, n_steps=n_steps, normalize=normalize)
     poincare = poincare_sections(
         trace.trajectories, phi_planes=poincare_phi_planes, nfp=poincare_nfp
     )

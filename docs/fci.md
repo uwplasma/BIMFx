@@ -64,6 +64,7 @@ analysis = analyze_flux_surfaces(
     poincare_phi_planes=[0.0, 0.5],
     ds=0.02,
     n_steps=1500,
+    trace_backend="jax",
 )
 ```
 

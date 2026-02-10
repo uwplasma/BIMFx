@@ -20,6 +20,18 @@ trace = trace_fieldlines_rk4(B, seeds, ds=0.05, n_steps=400, normalize=True)
 traj = trace.trajectories
 ```
 
+### JAX backend
+
+For large batches, the JAX backend can be faster (and GPU/TPU compatible):
+
+```python
+from bimfx import trace_fieldlines_rk4_jax
+
+trace = trace_fieldlines_rk4_jax(B, seeds, ds=0.05, n_steps=400, normalize=True)
+```
+
+Note: `B` must be JAX-compatible for this backend.
+
 ## Poincare sections
 
 ```python
@@ -30,4 +42,3 @@ R, Z = sec.R, sec.Z
 ```
 
 `phi_planes` are in cylindrical coordinates and repeated every `2π/nfp`.
-

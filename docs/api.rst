@@ -18,6 +18,7 @@ Public interface
    bimfx.io.boundary_from_sflm_npy
    bimfx.io.boundary_from_stl
    bimfx.tracing.trace_fieldlines_rk4
+   bimfx.tracing.trace_fieldlines_rk4_jax
    bimfx.tracing.poincare_sections
    bimfx.tracing.FieldlineTrace
    bimfx.tracing.PoincareSection

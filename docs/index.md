@@ -22,6 +22,7 @@ io
 tracing
 fci
 validation
+performance
 api
 roadmap
 ```
