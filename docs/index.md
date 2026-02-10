@@ -20,6 +20,7 @@ quickstart
 theory
 io
 tracing
+fci
 api
 roadmap
 ```

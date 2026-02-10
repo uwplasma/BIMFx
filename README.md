@@ -82,6 +82,11 @@ See `docs/io.md` and `examples/convert_boundary.py`.
 Field-line tracing and Poincare section tools are available in `bimfx.tracing`.
 See `docs/tracing.md`.
 
+## Flux-Surface Finding (FCI)
+
+An FCI-inspired anisotropic diffusion solver is available in `bimfx.fci`.
+See `docs/fci.md`.
+
 ## Documentation
 
 Documentation lives in `docs/` and is set up for ReadTheDocs.

@@ -8,6 +8,7 @@ from __future__ import annotations
 from ._version import __version__
 from .vacuum import VacuumField, solve_bim, solve_mfs
 from .tracing import FieldlineTrace, PoincareSection, poincare_sections, trace_fieldlines_rk4
+from .fci import FCISolution, field_alignment_error, solve_flux_psi_fci
 
 __all__ = [
     "__version__",
@@ -18,4 +19,7 @@ __all__ = [
     "PoincareSection",
     "trace_fieldlines_rk4",
     "poincare_sections",
+    "FCISolution",
+    "solve_flux_psi_fci",
+    "field_alignment_error",
 ]

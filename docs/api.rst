@@ -21,6 +21,11 @@ Public interface
    bimfx.tracing.poincare_sections
    bimfx.tracing.FieldlineTrace
    bimfx.tracing.PoincareSection
+   bimfx.fci.solve_flux_psi_fci
+   bimfx.fci.field_alignment_error
+   bimfx.fci.extract_isosurfaces
+   bimfx.fci.sample_psi_along_fieldlines
+   bimfx.fci.FCISolution
 
 Utilities
 ---------
