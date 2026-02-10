@@ -2,13 +2,13 @@ import jax.numpy as jnp
 from jax import debug as jax_debug
 from jax import lax, jit, value_and_grad, vmap
 import numpy as np
-from sklearn.neighbors import NearestNeighbors
+from scipy.spatial import cKDTree
 from functools import partial
 import jax.scipy.linalg as jsp_linalg
 
-from bimfx.MFS.geometry import (best_fit_axis, project_to_local, detect_geometry_and_axis,
+from bimfx.mfs.geometry import (best_fit_axis, project_to_local, detect_geometry_and_axis,
                                 multivalued_bases_about_axis, orthonormal_complement)
-from bimfx.MFS.sources_kernels import build_mfs_sources, build_evaluators_mfs, grad_green_x
+from bimfx.mfs.sources_kernels import build_mfs_sources, build_evaluators_mfs, grad_green_x
 from bimfx.utils.printing import vec_stats
 
 # ----------------------------- System build ---------------------- #
@@ -142,9 +142,9 @@ def build_ring_weights(P_in, Pn, k=32):
     XY = np.asarray(Ploc_ring[:, :2])
 
     k_eff = min(k+1, len(XY))
-    nbrs = NearestNeighbors(n_neighbors=k_eff, algorithm="kd_tree").fit(XY)
-    dists, _ = nbrs.kneighbors(XY)
-    rk_ring = dists[:, -1]  # k-th neighbor radius
+    tree = cKDTree(XY)
+    dists, _ = tree.query(XY, k=k_eff)
+    rk_ring = dists[:, -1]  # k-th neighbor radius (includes self at 0)
     W_ring = jnp.asarray(np.pi * rk_ring**2, dtype=jnp.float64)
     return W_ring
 
@@ -509,8 +509,8 @@ def build_cap_flux_constraint(P, N, Pn, Nn, scinfo, Yn,
     UV = np.column_stack([u1, u2])
 
     k_eff = min(k_cap+1, len(UV))
-    nbrs = NearestNeighbors(n_neighbors=k_eff, algorithm="kd_tree").fit(UV)
-    dists, _ = nbrs.kneighbors(UV)
+    tree = cKDTree(UV)
+    dists, _ = tree.query(UV, k=k_eff)
     rk_cap = dists[:, -1]
     W_cap = jnp.asarray(np.pi * rk_cap**2, dtype=jnp.float64)
 

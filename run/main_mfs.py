@@ -49,12 +49,12 @@ from bimfx.utils.io import get_candidates, load_surface_xyz_normals
 from bimfx.utils.plotting import (plot_geometry_and_solution, plot_boundary_condition_errors,
                                  plot_laplacian_errors_on_interior_band)
 from bimfx.utils.printing import vec_stats
-from bimfx.MFS.solvers import (autotune, build_ring_weights, build_system_matrices,
+from bimfx.mfs.solvers import (autotune, build_ring_weights, build_system_matrices,
                                fit_mv_coeffs_minimize_rhs, make_flux_constraint,
                                build_A_rows_at_points, build_cap_flux_constraint,
                                augmented_lagrangian_solve)
-from bimfx.MFS.geometry import (normalize_geometry, kNN_geometry_stats, maybe_flip_normals)
-from bimfx.MFS.sources_kernels import build_evaluators_mfs
+from bimfx.mfs.geometry import (normalize_geometry, kNN_geometry_stats, maybe_flip_normals)
+from bimfx.mfs.sources_kernels import build_evaluators_mfs
 
 # file_name = "wout_precise_QA"
 # file_name = "wout_precise_QH"

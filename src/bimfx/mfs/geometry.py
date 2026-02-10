@@ -1,8 +1,7 @@
 import jax.numpy as jnp
 from jax import lax, jit, tree_util
 import numpy as np
-from sklearn.decomposition import PCA
-from sklearn.neighbors import NearestNeighbors
+from scipy.spatial import cKDTree
 from dataclasses import dataclass
 
 @tree_util.register_pytree_node_class
@@ -41,11 +40,8 @@ def detect_geometry_and_axis(Pn, verbose=True):
     If ambiguous, default to torus behavior (axis=e3).
     Returns (kind, a_hat [3,], E [3x3], singvals [3], center c).
     """
-    c_np, E_np, pca = best_fit_axis(np.array(Pn), verbose=False)
-    svals = np.array(pca.singular_values_)      # already sorted in best_fit_axis
-    # We sorted desc in best_fit_axis via 'order'; reconstruct the same order here:
-    order = np.argsort(-pca.singular_values_)
-    s = svals[order]  # s[0]>=s[1]>=s[2]
+    c_np, E_np, s = best_fit_axis(np.array(Pn), verbose=False)
+    s = np.asarray(s)  # s[0]>=s[1]>=s[2]
     E = np.asarray(E_np)                         # columns e1,e2,e3
     e1, e2, e3 = E[:,0], E[:,1], E[:,2]
 
@@ -60,9 +56,9 @@ def detect_geometry_and_axis(Pn, verbose=True):
         kind = "torus"    # thin shell: two wide directions >> one thin
         a_hat = jnp.asarray(e3 / (np.linalg.norm(e3) + 1e-30))
     else:
-        # Ambiguous → fall back to torus-like choice
-        kind = "torus"
-        a_hat = jnp.asarray(e3 / (np.linalg.norm(e3) + 1e-30))
+        # Roughly isotropic / ambiguous (e.g. sphere-like): treat as simply-connected.
+        kind = "blob"
+        a_hat = jnp.asarray(e1 / (np.linalg.norm(e1) + 1e-30))
 
     if verbose:
         print(f"[GEOM] s (desc) = {s}; ratio_long={ratio_long:.2f}, ratio_thin={ratio_thin:.2f}")
@@ -73,22 +69,18 @@ def detect_geometry_and_axis(Pn, verbose=True):
 def best_fit_axis(points, verbose=True):
     c = np.mean(points, axis=0)
     X = points - c
-    pca = PCA(n_components=3).fit(X)
-    # Sort by singular value DESC:
-    order = np.argsort(-pca.singular_values_)
-    comps = pca.components_[order]  # comps[0], comps[1] = in-plane; comps[2] = smallest
-    # e3 = plane normal (smallest variance)
-    e3 = comps[2]
-    # make a right-handed in-plane frame
-    e1 = comps[0] - np.dot(comps[0], e3) * e3
-    e1 /= np.linalg.norm(e1) + 1e-30
+    # SVD gives principal axes; singular values are already sorted desc.
+    # X ≈ U diag(s) V^T, and rows of V^T are principal directions.
+    _, svals, vt = np.linalg.svd(X, full_matrices=False)
+    v1, v2, v3 = vt  # v1: largest variance axis, v3: smallest
+    e3 = v3 / (np.linalg.norm(v3) + 1e-30)
+    e1 = v1 / (np.linalg.norm(v1) + 1e-30)
     e2 = np.cross(e3, e1)
     E = np.stack([e1, e2, e3], axis=1)
     if verbose:
-        print(f"[PCA] singular values: {pca.singular_values_}")
-        print(f"[PCA] var ratios: {pca.explained_variance_ratio_}")
-        print("[AXES] Using e3 = smallest-singular-vector (plane normal).")
-    return jnp.asarray(c), jnp.asarray(E), pca
+        print(f"[PCA] singular values (desc): {svals}")
+        print("[AXES] Using e3 = smallest-singular-vector (best-fit plane normal).")
+    return jnp.asarray(c), jnp.asarray(E), svals
 
 @jit
 def project_to_local(P, c, E): return (P - c) @ E
@@ -129,9 +121,9 @@ def kNN_geometry_stats(Pn, k=48, verbose=True):
     Ploc = project_to_local(Pn, c, E)
     XY = np.asarray(Ploc[:, :2])
     k_eff = min(k+1, len(XY))
-    nbrs = NearestNeighbors(n_neighbors=k_eff, algorithm="kd_tree").fit(XY)
-    dists, _ = nbrs.kneighbors(XY)
-    rk = dists[:, -1]                              # k-th neighbor radius in local plane
+    tree = cKDTree(XY)
+    dists, _ = tree.query(XY, k=k_eff)
+    rk = dists[:, -1]                              # k-th neighbor radius in local plane (includes self at 0)
     W = jnp.asarray(np.pi * rk**2, dtype=jnp.float64)
     if verbose:
         print(f"[QUAD] k-NN k={k}, area stats: min={float(W.min()):.3g}, max={float(W.max()):.3g}, median={float(jnp.median(W)):.3g}")

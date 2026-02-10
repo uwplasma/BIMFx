@@ -3,27 +3,32 @@ requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["bimfx"]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [project]
 name = "bimfx"
 version = "0.1.0"
-description = "Laplce solvers with the Method of Fundamental Solutions (MFS) and Boundary Integral Methods (BIM) using JAX."
+description = "Vacuum magnetic field solvers (BIM + MFS) for Laplace's equation in arbitrary 3D geometry."
 readme = "README.md"
 authors = [
   { name = "UWPlasma Group", email = "rogerio.jorge@wisc.edu" }
 ]
 license = { text = "MIT" }
 dependencies = [
-  # JAX and its runtime
   "jax",
   "jaxlib",
-  # Base numerical dependency
-  "numpy >= 1.20",
-  # Matplotlib and Plotly are required for plotting utilities
-  "matplotlib >= 3.5",
+  "numpy>=1.20",
+  "scipy>=1.9",
 ]
 requires-python = ">=3.8"
+
+[project.optional-dependencies]
+plot = ["matplotlib>=3.5"]
+dev = ["pytest>=7", "ruff>=0.1.0"]
+docs = ["sphinx>=7", "furo>=2024.1.29", "myst-parser>=2.0.0", "sphinx-autodoc-typehints>=1.25.0"]
 
 [project.urls]
 Homepage = "https://github.com/uwplasma/BIMFx"

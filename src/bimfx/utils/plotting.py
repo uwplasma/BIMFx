@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import jax.numpy as jnp
 from scipy.interpolate import griddata
 
-from bimfx.MFS.geometry import orthonormal_complement
+from bimfx.mfs.geometry import orthonormal_complement
 
 def pct(a, p): return float(np.percentile(np.asarray(a), p))
 
