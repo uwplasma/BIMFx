@@ -100,6 +100,12 @@ Validation helpers for boundary residuals and divergence checks are in
 Example scripts live in `examples/`, with bundled input datasets in `inputs/`.
 See `docs/examples.md` and `docs/io.md`.
 
+For a paper-ready validation report across all datasets:
+
+```bash
+JAX_ENABLE_X64=1 python examples/validation_report.py --outdir outputs/validation_report
+```
+
 ## Documentation
 
 Documentation lives in `docs/` and is set up for ReadTheDocs.

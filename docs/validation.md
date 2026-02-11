@@ -51,6 +51,19 @@ print(stats["divergence"])
 - For toroidal cases, report sensitivity to `k_nn`, `lambda_reg`, and source placement.
 - For MFS vs BIM, compare `B` on a fixed probe set.
 
+## Validation sweep report
+
+Generate a paper-ready report (tables + plots) across all bundled inputs:
+
+```bash
+JAX_ENABLE_X64=1 python examples/validation_report.py --outdir outputs/validation_report
+```
+
+Outputs include:
+
+- `summary.csv` and `summary.md`
+- `sweep_k_nn.png`, `sweep_subsample.png`, `sweep_lambda_reg.png`
+
 ## Source code
 
 - Validation helpers: [src/bimfx/validation.py](https://github.com/uwplasma/BIMFx/blob/main/src/bimfx/validation.py)

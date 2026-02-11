@@ -19,6 +19,7 @@ save_boundary_csv(points, normals, "boundary_export")
 The repository ships small reference datasets under `inputs/`:
 
 - VMEC boundary (NetCDF): `inputs/wout_precise_QA.nc`
+- VMEC boundary (NetCDF): `inputs/wout_SLAM_6_coils.nc`
 - Near-axis boundary (CSV + normals): `inputs/wout_LandremanSenguptaPlunk_5.3.csv`
 - Mirror boundary (CSV + normals): `inputs/sflm_rm4.csv`
 - Knot boundary (CSV + normals): `inputs/knot_tube.csv`
