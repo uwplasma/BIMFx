@@ -15,6 +15,27 @@ This page summarizes performance characteristics and recommended settings.
 - For production runs, increase boundary sampling and validate convergence.
 - JAX solvers are dense and intended for moderate problem sizes.
 - BIM supports an optional CG solve with Jacobi preconditioning via `SolveOptions(solver="cg")`.
+- For large evaluation batches, enable Barnes-Hut acceleration via `SolveOptions(acceleration="barnes-hut")`.
+
+## Accelerated kernel evaluation
+
+The Barnes-Hut accelerator approximates far-field source contributions using a monopole
+approximation and reduces evaluation cost for large point clouds:
+
+```python
+from bimfx.vacuum.solve import SolveOptions
+from bimfx import solve_mfs
+
+options = SolveOptions(
+    acceleration="barnes-hut",
+    accel_theta=0.6,
+    accel_leaf_size=64,
+    verbose=False,
+)
+field = solve_mfs(points, normals, options=options)
+```
+
+Tighter `accel_theta` improves accuracy but reduces speed.
 
 ## Kernel caching
 
@@ -36,3 +57,4 @@ grad = cache.grad(alpha)
 ## Source code
 
 - Tracing backends: [src/bimfx/tracing.py](https://github.com/uwplasma/BIMFx/blob/main/src/bimfx/tracing.py)
+- Barnes-Hut accelerator: [src/bimfx/utils/fastsum.py](https://github.com/uwplasma/BIMFx/blob/main/src/bimfx/utils/fastsum.py)

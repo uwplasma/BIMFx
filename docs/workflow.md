@@ -3,7 +3,8 @@
 ## CLI (autodetect input formats)
 
 ```bash
-JAX_ENABLE_X64=1 bimfx --input inputs/knot_tube.csv --normals inputs/knot_tube_normals.csv --method mfs --validate
+JAX_ENABLE_X64=1 bimfx --input inputs/knot_tube.csv --normals inputs/knot_tube_normals.csv --method mfs --validate \
+  --k-nn 24 --lambda-reg 1e-6 --acceleration barnes-hut
 ```
 
 Mesh inputs are supported via `trimesh`:
@@ -33,6 +34,11 @@ subsample = 200
 [solve]
 method = "mfs"
 toroidal_flux = 1.0
+k_nn = 24
+lambda_reg = 1e-6
+acceleration = "barnes-hut"
+accel_theta = 0.6
+accel_leaf_size = 64
 
 [validate]
 eps_factor = 0.02

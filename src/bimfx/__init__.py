@@ -18,6 +18,7 @@ from .fci import FCISolution, field_alignment_error, solve_flux_psi_fci
 from .jax_solvers import BIMJaxField, MFSJaxField, solve_bim_jax, solve_mfs_jax
 from .objectives import boundary_residual_objective, divergence_objective
 from .pipeline import run_pipeline, PipelineResult
+from .sweep import SweepRecord, SweepResult, coarse_to_fine_sweep
 
 __all__ = [
     "__version__",
@@ -40,4 +41,7 @@ __all__ = [
     "divergence_objective",
     "run_pipeline",
     "PipelineResult",
+    "coarse_to_fine_sweep",
+    "SweepRecord",
+    "SweepResult",
 ]

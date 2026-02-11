@@ -19,6 +19,9 @@ class SolveOptions:
     source_factor: float = 2.0
     lambda_reg: float = 1e-6
     clip_factor: float = 0.2  # BIM near-singular regularization
+    acceleration: Literal["none", "barnes-hut"] = "none"
+    accel_theta: float = 0.6
+    accel_leaf_size: int = 64
     solver: Literal["direct", "cg"] = "direct"
     cg_tol: float = 1e-8
     cg_maxiter: int = 500
@@ -65,6 +68,9 @@ def solve_mfs(
         source_factor=options.source_factor,
         lambda_reg=options.lambda_reg,
         harmonic_coeffs=harmonic_coeffs,
+        acceleration=options.acceleration,
+        accel_theta=options.accel_theta,
+        accel_leaf_size=options.accel_leaf_size,
         verbose=options.verbose,
     )
 
@@ -101,6 +107,9 @@ def solve_bim(
         lambda_reg=options.lambda_reg,
         clip_factor=options.clip_factor,
         harmonic_coeffs=harmonic_coeffs,
+        acceleration=options.acceleration,
+        accel_theta=options.accel_theta,
+        accel_leaf_size=options.accel_leaf_size,
         solver=options.solver,
         cg_tol=options.cg_tol,
         cg_maxiter=options.cg_maxiter,

@@ -30,6 +30,7 @@ These scripts are designed to be runnable end-to-end and demonstrate common work
   [examples/validate_vacuum_solver.py](https://github.com/uwplasma/BIMFx/blob/main/examples/validate_vacuum_solver.py)
 - Full validation report (sweeps across datasets):
   [examples/validation_report.py](https://github.com/uwplasma/BIMFx/blob/main/examples/validation_report.py)
+  - Optional `--coarse-to-fine` for parameter tuning sweeps.
 
 ## Notebooks
 

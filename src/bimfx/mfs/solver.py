@@ -14,7 +14,7 @@ from bimfx.mfs.geometry import (
     multivalued_bases_about_axis,
     normalize_geometry,
 )
-from bimfx.mfs.sources_kernels import build_evaluators_mfs, build_mfs_sources
+from bimfx.mfs.sources_kernels import build_evaluators_mfs, build_evaluators_mfs_accel, build_mfs_sources
 from bimfx.mfs.solvers import (
     build_system_matrices,
     fit_mv_coeffs_minimize_rhs,
@@ -38,9 +38,15 @@ def solve_mfs_neumann(
     source_factor: float = 2.0,
     lambda_reg: float = 1e-6,
     harmonic_coeffs: tuple[float, float] | None = None,
+    acceleration: str = "none",
+    accel_theta: float = 0.6,
+    accel_leaf_size: int = 64,
     verbose: bool = True,
 ) -> MFSSolution:
-    """MFS-based Neumann solve enforcing ``n·B = 0`` on the boundary point cloud."""
+    """MFS-based Neumann solve enforcing ``n·B = 0`` on the boundary point cloud.
+
+    Set ``acceleration="barnes-hut"`` to enable approximate far-field summation.
+    """
     if not jax.config.jax_enable_x64:
         raise RuntimeError(
             "BIMFx MFS solver requires JAX 64-bit mode for numerical stability. "
@@ -81,9 +87,24 @@ def solve_mfs_neumann(
     A, _D = build_system_matrices(Pn, Nn, Yn, W, grad_t, grad_p, scinfo, use_mv=use_mv_eff, verbose=verbose)
     alpha = solve_alpha_with_rhs(A, W, g_raw, lam=lambda_reg, verbose=verbose)
 
-    phi_fn, grad_fn, _psi_fn, _grad_psi_fn, _lap_psi_fn, _grad_mv = build_evaluators_mfs(
-        Pn, Yn, alpha, phi_t, phi_p, a, scinfo, grad_t, grad_p
-    )
+    if acceleration == "barnes-hut":
+        phi_fn, grad_fn, _psi_fn, _grad_psi_fn, _lap_psi_fn, _grad_mv = build_evaluators_mfs_accel(
+            Pn,
+            Yn,
+            alpha,
+            phi_t,
+            phi_p,
+            a,
+            scinfo,
+            grad_t,
+            grad_p,
+            theta=accel_theta,
+            leaf_size=accel_leaf_size,
+        )
+    else:
+        phi_fn, grad_fn, _psi_fn, _grad_psi_fn, _lap_psi_fn, _grad_mv = build_evaluators_mfs(
+            Pn, Yn, alpha, phi_t, phi_p, a, scinfo, grad_t, grad_p
+        )
 
     metadata = {
         "method": "mfs",
@@ -94,5 +115,6 @@ def solve_mfs_neumann(
         "harmonic_coeffs": [float(a[0]), float(a[1])],
         "geometry_kind": str(kind),
         "normals_flipped": bool(flipped),
+        "acceleration": str(acceleration),
     }
     return MFSSolution(phi=phi_fn, B=grad_fn, metadata=metadata)

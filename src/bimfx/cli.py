@@ -10,6 +10,7 @@ import numpy as np
 from bimfx import solve_bim, solve_bim_jax, solve_mfs, solve_mfs_jax
 from bimfx.io import load_boundary
 from bimfx.validation import relative_boundary_residual, summary_stats
+from bimfx.vacuum.solve import SolveOptions
 
 
 def main() -> None:
@@ -23,6 +24,13 @@ def main() -> None:
     p.add_argument("--even", action="store_true", help="Even mesh sampling.")
     p.add_argument("--method", choices=["mfs", "bim", "mfs-jax", "bim-jax"], default="mfs")
     p.add_argument("--toroidal-flux", type=float, default=None)
+    p.add_argument("--k-nn", type=int, default=48)
+    p.add_argument("--lambda-reg", type=float, default=1e-6)
+    p.add_argument("--source-factor", type=float, default=2.0)
+    p.add_argument("--clip-factor", type=float, default=0.2)
+    p.add_argument("--acceleration", choices=["none", "barnes-hut"], default="none")
+    p.add_argument("--accel-theta", type=float, default=0.6)
+    p.add_argument("--accel-leaf-size", type=int, default=64)
     p.add_argument("--subsample", type=int, default=0)
     p.add_argument("--validate", action="store_true")
     p.add_argument("--outdir", default="outputs/cli")
@@ -50,14 +58,33 @@ def main() -> None:
     if args.toroidal_flux is not None:
         harmonic_coeffs = (float(args.toroidal_flux) / (2.0 * np.pi), 0.0)
 
-    if args.method == "mfs":
-        field = solve_mfs(P, N, harmonic_coeffs=harmonic_coeffs)
-    elif args.method == "bim":
-        field = solve_bim(P, N, harmonic_coeffs=harmonic_coeffs)
+    if args.method in {"mfs", "bim"}:
+        options = SolveOptions(
+            method="mfs" if args.method == "mfs" else "bim",
+            k_nn=args.k_nn,
+            lambda_reg=args.lambda_reg,
+            source_factor=args.source_factor,
+            clip_factor=args.clip_factor,
+            acceleration=args.acceleration,
+            accel_theta=args.accel_theta,
+            accel_leaf_size=args.accel_leaf_size,
+            verbose=False,
+        )
+        if args.method == "mfs":
+            field = solve_mfs(P, N, harmonic_coeffs=harmonic_coeffs, options=options)
+        else:
+            field = solve_bim(P, N, harmonic_coeffs=harmonic_coeffs, options=options)
     elif args.method == "mfs-jax":
-        field = solve_mfs_jax(P, N, harmonic_coeffs=harmonic_coeffs)
+        field = solve_mfs_jax(P, N, k_nn=args.k_nn, lambda_reg=args.lambda_reg, harmonic_coeffs=harmonic_coeffs)
     else:
-        field = solve_bim_jax(P, N, harmonic_coeffs=harmonic_coeffs)
+        field = solve_bim_jax(
+            P,
+            N,
+            k_nn=args.k_nn,
+            lambda_reg=args.lambda_reg,
+            clip_factor=args.clip_factor,
+            harmonic_coeffs=harmonic_coeffs,
+        )
 
     outdir = Path(args.outdir)
     outdir.mkdir(parents=True, exist_ok=True)

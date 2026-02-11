@@ -17,6 +17,7 @@ from bimfx.mfs.geometry import (
     multivalued_bases_about_axis,
     normalize_geometry,
 )
+from bimfx.utils.fastsum import BarnesHut3D
 
 
 @dataclass(frozen=True)
@@ -128,6 +129,39 @@ def make_single_layer_evaluators(
     return jit(vmap(phi_s_at_point)), jit(vmap(grad_phi_s_at_point))
 
 
+def make_single_layer_evaluators_accel(
+    P_src: jnp.ndarray,
+    W_src: jnp.ndarray,
+    sigma: jnp.ndarray,
+    *,
+    h_min: float,
+    clip_factor: float,
+    theta: float = 0.6,
+    leaf_size: int = 64,
+):
+    """Accelerated evaluators for the single-layer potential using Barnes-Hut."""
+    P_np = np.asarray(P_src)
+    weight = np.asarray(sigma * W_src)
+    tree = BarnesHut3D(P_np, weight, theta=theta, leaf_size=leaf_size)
+    h2_clip = (clip_factor * float(h_min)) ** 2
+
+    def phi_s_at_points(X: np.ndarray) -> np.ndarray:
+        return tree.potential(np.asarray(X))
+
+    def grad_phi_s_at_points(X: np.ndarray) -> np.ndarray:
+        X = np.asarray(X)
+        if X.ndim == 1:
+            diff = X[None, :] - P_np
+            r2 = np.sum(diff * diff, axis=-1)
+            r2 = np.maximum(r2, h2_clip)
+            r3 = np.maximum(r2 * np.sqrt(r2), 1e-30)
+            grad = -np.sum(diff * (weight / (4.0 * np.pi * r3))[:, None], axis=0)
+            return grad
+        return tree.gradient(X)
+
+    return phi_s_at_points, grad_phi_s_at_points
+
+
 def solve_bim_neumann(
     points: Any,
     normals: Any,
@@ -137,13 +171,19 @@ def solve_bim_neumann(
     lambda_reg: float = 1e-6,
     clip_factor: float = 0.2,
     harmonic_coeffs: tuple[float, float] | None = None,
+    acceleration: str = "none",
+    accel_theta: float = 0.6,
+    accel_leaf_size: int = 64,
     solver: str = "direct",
     cg_tol: float = 1e-8,
     cg_maxiter: int = 500,
     preconditioner: str = "jacobi",
     verbose: bool = True,
 ) -> BIMSolution:
-    """BIM-based Neumann solve enforcing ``n·B = 0`` on the boundary point cloud."""
+    """BIM-based Neumann solve enforcing ``n·B = 0`` on the boundary point cloud.
+
+    Set ``acceleration="barnes-hut"`` to enable approximate far-field summation.
+    """
     if not jax.config.jax_enable_x64:
         raise RuntimeError(
             "BIMFx BIM solver requires JAX 64-bit mode for numerical stability. "
@@ -198,7 +238,18 @@ def solve_bim_neumann(
         cg_maxiter=cg_maxiter,
         preconditioner=preconditioner,
     )
-    phi_s_fn, grad_s_fn = make_single_layer_evaluators(P, W, sigma, h_min=h_min, clip_factor=clip_factor)
+    if acceleration == "barnes-hut":
+        phi_s_fn, grad_s_fn = make_single_layer_evaluators_accel(
+            P,
+            W,
+            sigma,
+            h_min=h_min,
+            clip_factor=clip_factor,
+            theta=accel_theta,
+            leaf_size=accel_leaf_size,
+        )
+    else:
+        phi_s_fn, grad_s_fn = make_single_layer_evaluators(P, W, sigma, h_min=h_min, clip_factor=clip_factor)
 
     def B_mv_fn(X):
         if not use_mv_eff:
@@ -219,5 +270,6 @@ def solve_bim_neumann(
         "harmonic_coeffs": [float(a[0]), float(a[1])],
         "geometry_kind": str(kind),
         "normals_flipped": bool(flipped),
+        "acceleration": str(acceleration),
     }
     return BIMSolution(phi=phi_s_fn, B=B_fn, metadata=metadata)

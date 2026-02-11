@@ -10,6 +10,7 @@ import numpy as np
 from bimfx import solve_bim, solve_bim_jax, solve_mfs, solve_mfs_jax
 from bimfx.io import load_boundary
 from bimfx.validation import relative_boundary_residual, summary_stats
+from bimfx.vacuum.solve import SolveOptions
 
 
 @dataclass(frozen=True)
@@ -64,14 +65,39 @@ def run_pipeline(config_path: str | Path) -> PipelineResult:
     if toroidal_flux is not None:
         harmonic_coeffs = (float(toroidal_flux) / (2.0 * np.pi), 0.0)
 
-    if method == "mfs":
-        field = solve_mfs(P, N, harmonic_coeffs=harmonic_coeffs)
-    elif method == "bim":
-        field = solve_bim(P, N, harmonic_coeffs=harmonic_coeffs)
+    if method in {"mfs", "bim"}:
+        options = SolveOptions(
+            method="mfs" if method == "mfs" else "bim",
+            k_nn=int(solve_cfg.get("k_nn", 48)),
+            lambda_reg=float(solve_cfg.get("lambda_reg", 1e-6)),
+            source_factor=float(solve_cfg.get("source_factor", 2.0)),
+            clip_factor=float(solve_cfg.get("clip_factor", 0.2)),
+            acceleration=str(solve_cfg.get("acceleration", "none")),
+            accel_theta=float(solve_cfg.get("accel_theta", 0.6)),
+            accel_leaf_size=int(solve_cfg.get("accel_leaf_size", 64)),
+            verbose=bool(solve_cfg.get("verbose", False)),
+        )
+        if method == "mfs":
+            field = solve_mfs(P, N, harmonic_coeffs=harmonic_coeffs, options=options)
+        else:
+            field = solve_bim(P, N, harmonic_coeffs=harmonic_coeffs, options=options)
     elif method == "mfs-jax":
-        field = solve_mfs_jax(P, N, harmonic_coeffs=harmonic_coeffs)
+        field = solve_mfs_jax(
+            P,
+            N,
+            k_nn=int(solve_cfg.get("k_nn", 48)),
+            lambda_reg=float(solve_cfg.get("lambda_reg", 1e-6)),
+            harmonic_coeffs=harmonic_coeffs,
+        )
     elif method == "bim-jax":
-        field = solve_bim_jax(P, N, harmonic_coeffs=harmonic_coeffs)
+        field = solve_bim_jax(
+            P,
+            N,
+            k_nn=int(solve_cfg.get("k_nn", 48)),
+            lambda_reg=float(solve_cfg.get("lambda_reg", 1e-6)),
+            clip_factor=float(solve_cfg.get("clip_factor", 0.2)),
+            harmonic_coeffs=harmonic_coeffs,
+        )
     else:
         raise ValueError(f"Unknown method: {method}")
 

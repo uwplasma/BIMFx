@@ -134,3 +134,29 @@ def test_bim_ellipsoid_zero_field():
     Pin = P - 0.05 * N
     B = np.asarray(field.B(Pin))
     assert np.max(np.linalg.norm(B, axis=1)) < 1e-10
+
+
+def test_accelerated_evaluators_close_to_direct():
+    _require_x64()
+    from bimfx import solve_bim, solve_mfs
+    from bimfx.vacuum.solve import SolveOptions
+
+    P, N = _torus_point_cloud(R=3.0, r=1.0, nphi=6, ntheta=6)
+    Pin = P - 0.05 * N
+
+    opts_ref = SolveOptions(verbose=False)
+    opts_accel = SolveOptions(acceleration="barnes-hut", accel_theta=0.6, accel_leaf_size=16, verbose=False)
+
+    field_mfs_ref = solve_mfs(P, N, toroidal_flux=1.0, options=opts_ref)
+    field_mfs_fast = solve_mfs(P, N, toroidal_flux=1.0, options=opts_accel)
+    B_ref = np.asarray(field_mfs_ref.B(Pin))
+    B_fast = np.asarray(field_mfs_fast.B(Pin))
+    rel = np.linalg.norm(B_fast - B_ref) / np.maximum(1e-12, np.linalg.norm(B_ref))
+    assert rel < 0.2
+
+    field_bim_ref = solve_bim(P, N, toroidal_flux=1.0, options=opts_ref)
+    field_bim_fast = solve_bim(P, N, toroidal_flux=1.0, options=opts_accel)
+    B_ref = np.asarray(field_bim_ref.B(Pin))
+    B_fast = np.asarray(field_bim_fast.B(Pin))
+    rel = np.linalg.norm(B_fast - B_ref) / np.maximum(1e-12, np.linalg.norm(B_ref))
+    assert rel < 0.2

@@ -2,6 +2,8 @@ from jax import jit, vmap, jacrev
 import jax.numpy as jnp
 import numpy as np
 
+from bimfx.utils.fastsum import BarnesHut3D
+
 # ----------------------------- Kernels -------------------------- #
 @jit
 def green_G(x, y):
@@ -87,3 +89,63 @@ def build_evaluators_mfs(Pn, Yn, alpha, phi_t, phi_p, a, scinfo,
         return jnp.trace(J, axis1=1, axis2=2)
 
     return phi_fn_world, grad_fn_world, psi_fn_world, grad_psi_fn_world, laplacian_psi_world, grad_mv_world_batch
+
+
+def build_evaluators_mfs_accel(
+    Pn,
+    Yn,
+    alpha,
+    phi_t,
+    phi_p,
+    a,
+    scinfo,
+    grad_t_fn,
+    grad_p_fn,
+    *,
+    theta: float = 0.6,
+    leaf_size: int = 64,
+):
+    """Accelerated MFS evaluators using a Barnes-Hut tree for source sums."""
+    tree = BarnesHut3D(np.asarray(Yn), np.asarray(alpha), theta=theta, leaf_size=leaf_size)
+
+    def _phi_mv_world(X):
+        Xn = (np.asarray(X) - np.asarray(scinfo.center)) * float(scinfo.scale)
+        return np.asarray(a[0] * phi_t(jnp.asarray(Xn)) + a[1] * phi_p(jnp.asarray(Xn)))
+
+    def _grad_mv_world_batch(X):
+        Xn = (np.asarray(X) - np.asarray(scinfo.center)) * float(scinfo.scale)
+        grad = scinfo.scale * (a[0] * grad_t_fn(jnp.asarray(Xn)) + a[1] * grad_p_fn(jnp.asarray(Xn)))
+        return np.asarray(grad)
+
+    def psi_fn_world(X):
+        Xn = (np.asarray(X) - np.asarray(scinfo.center)) * float(scinfo.scale)
+        return tree.potential(Xn)
+
+    def grad_psi_fn_world(X):
+        Xn = (np.asarray(X) - np.asarray(scinfo.center)) * float(scinfo.scale)
+        grad_n = tree.gradient(Xn)
+        return float(scinfo.scale) * grad_n
+
+    def phi_fn_world(X):
+        return _phi_mv_world(X) + psi_fn_world(X)
+
+    def grad_fn_world(X):
+        return _grad_mv_world_batch(X) + grad_psi_fn_world(X)
+
+    def laplacian_psi_world(X):
+        Xn = (np.asarray(X) - np.asarray(scinfo.center)) * float(scinfo.scale)
+        eps = 1e-6
+        lap = np.zeros(Xn.shape[0])
+        for i, x in enumerate(Xn):
+            phi0 = tree.potential(x)
+            acc = 0.0
+            for d in range(3):
+                xp = x.copy()
+                xm = x.copy()
+                xp[d] += eps
+                xm[d] -= eps
+                acc += (tree.potential(xp) - 2 * phi0 + tree.potential(xm)) / (eps**2)
+            lap[i] = acc * (scinfo.scale**2)
+        return lap
+
+    return phi_fn_world, grad_fn_world, psi_fn_world, grad_psi_fn_world, laplacian_psi_world, _grad_mv_world_batch
