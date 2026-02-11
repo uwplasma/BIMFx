@@ -165,12 +165,14 @@ def test_accelerated_evaluators_close_to_direct():
 def _expected_azimuthal_field(P: np.ndarray, Pin: np.ndarray, a_t: float) -> np.ndarray:
     import jax.numpy as jnp
 
-    from bimfx.mfs.geometry import grad_azimuth_about_axis, normalize_geometry
+    from bimfx.mfs.geometry import detect_geometry_and_axis, grad_azimuth_about_axis, normalize_geometry
 
     Pj = jnp.asarray(P)
     Pn, scinfo = normalize_geometry(Pj, verbose=False)
+    kind, a_hat, _E, _c, _s = detect_geometry_and_axis(Pn, verbose=False)
+    if str(kind) != "torus":
+        a_hat = jnp.array([0.0, 0.0, 1.0])
     Xn = (jnp.asarray(Pin) - scinfo.center) * scinfo.scale
-    a_hat = jnp.array([0.0, 0.0, 1.0])
     Bn = scinfo.scale * a_t * grad_azimuth_about_axis(Xn, a_hat)
     return np.asarray(Bn)
 
