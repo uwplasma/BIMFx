@@ -60,3 +60,13 @@ JAX_ENABLE_X64=1 python examples/compare_mfs_bim_inputs.py
 ```bash
 JAX_ENABLE_X64=1 python examples/solve_vacuum_from_csv.py --method mfs --xyz inputs/knot_tube.csv --normals inputs/knot_tube_normals.csv --subsample 200
 ```
+
+## CLI (autodetect input formats)
+
+```bash
+JAX_ENABLE_X64=1 bimfx --input inputs/knot_tube.csv --normals inputs/knot_tube_normals.csv --method mfs --validate
+```
+
+## Notebook
+
+See the quickstart notebook in `notebooks/quickstart.ipynb`.

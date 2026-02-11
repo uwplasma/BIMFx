@@ -63,6 +63,9 @@ Outputs include:
 
 - `summary.csv` and `summary.md`
 - `sweep_k_nn.png`, `sweep_subsample.png`, `sweep_lambda_reg.png`
+- BIM vs MFS probe-point cross-validation (in `summary.md`)
+
+The `sweep_subsample.png` plot provides a coarse-to-fine convergence view.
 
 ## Source code
 

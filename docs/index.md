@@ -25,6 +25,8 @@ validation
 performance
 examples
 references
+differentiable
+workflow
 api
 roadmap
 ```

@@ -10,6 +10,8 @@ These scripts are designed to be runnable end-to-end and demonstrate common work
   [examples/solve_from_vmec_wout.py](https://github.com/uwplasma/BIMFx/blob/main/examples/solve_from_vmec_wout.py)
 - Compare MFS vs BIM across datasets:
   [examples/compare_mfs_bim_inputs.py](https://github.com/uwplasma/BIMFx/blob/main/examples/compare_mfs_bim_inputs.py)
+- Pipeline config example:
+  [examples/pipeline.toml](https://github.com/uwplasma/BIMFx/blob/main/examples/pipeline.toml)
 
 ## FCI + field-line tools
 
@@ -28,3 +30,8 @@ These scripts are designed to be runnable end-to-end and demonstrate common work
   [examples/validate_vacuum_solver.py](https://github.com/uwplasma/BIMFx/blob/main/examples/validate_vacuum_solver.py)
 - Full validation report (sweeps across datasets):
   [examples/validation_report.py](https://github.com/uwplasma/BIMFx/blob/main/examples/validation_report.py)
+
+## Notebooks
+
+- Quickstart notebook:
+  [notebooks/quickstart.ipynb](https://github.com/uwplasma/BIMFx/blob/main/notebooks/quickstart.ipynb)

@@ -13,12 +13,23 @@ Public interface
    bimfx.io.BoundaryData
    bimfx.io.load_boundary_csv
    bimfx.io.save_boundary_csv
+   bimfx.io.load_boundary
+   bimfx.io.estimate_normals
    bimfx.io.boundary_from_vmec_wout
    bimfx.io.boundary_from_slam_npz
    bimfx.io.boundary_from_sflm_npy
+   bimfx.io.boundary_from_mesh
    bimfx.io.boundary_from_stl
    bimfx.tracing.trace_fieldlines_rk4
    bimfx.tracing.trace_fieldlines_rk4_jax
+   bimfx.solve_mfs_jax
+   bimfx.solve_bim_jax
+   bimfx.jax_solvers.MFSJaxField
+   bimfx.jax_solvers.BIMJaxField
+   bimfx.objectives.boundary_residual_objective
+   bimfx.objectives.divergence_objective
+   bimfx.pipeline.run_pipeline
+   bimfx.pipeline.PipelineResult
    bimfx.tracing.poincare_sections
    bimfx.tracing.FieldlineTrace
    bimfx.tracing.PoincareSection
@@ -51,3 +62,4 @@ Utilities
    :toctree: _generated
 
    bimfx.fieldline.trace_fieldline_rk4
+   bimfx.utils.MFSKernelCache

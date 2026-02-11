@@ -14,6 +14,20 @@ points, normals = data.points, data.normals
 save_boundary_csv(points, normals, "boundary_export")
 ```
 
+## Autodetect loader
+
+```python
+from bimfx.io import load_boundary
+
+data = load_boundary("surface.csv", normals_path="surface_normals.csv")
+```
+
+If normals are missing, you can estimate them:
+
+```python
+data = load_boundary("surface.csv", estimate_normals=True, normal_k=20)
+```
+
 ## Sample input datasets
 
 The repository ships small reference datasets under `inputs/`:
@@ -76,6 +90,8 @@ Requires `trimesh`:
 ```bash
 pip install "bimfx[io]"
 ```
+
+You can also use `boundary_from_mesh` to load PLY/OBJ meshes.
 
 ## Source code
 

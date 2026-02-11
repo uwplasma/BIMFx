@@ -41,19 +41,19 @@ This repository is being consolidated from an earlier “LX” umbrella reposito
   - exterior MFS/BIM consistent with an interior solution (planned)
   - robust handling of multiply-connected topology (flux constraints / basis selection) (planned)
 - **Diagnostics**
-  - boundary-condition residuals evaluated on an interior offset surface (planned)
+  - boundary-condition residuals evaluated on an interior offset surface (current)
   - Laplacian residual checks with manufactured solutions (planned)
   - energy / flux functionals suitable for optimization (planned)
 - **Field-line tracing**
   - fast RK integrators + adaptive stepping (planned)
   - Poincaré sections and connection-length diagnostics (planned)
 - **Geometry + I/O**
-  - CSV boundary point clouds (current via examples)
-  - VMEC `wout` → boundary extraction (planned)
-  - STL/mesh → point cloud + normals (planned)
+  - CSV boundary point clouds (current)
+  - VMEC `wout` → boundary extraction (current)
+  - STL/mesh → point cloud + normals (current, optional `trimesh`)
   - built-in example geometries (tokamak/stellarator/mirror/knot) (planned)
 - **Optimization**
-  - objective wrappers (quasi-symmetry proxies, coil metrics, etc.) (planned)
+  - objective wrappers (boundary/divergence objectives) (current)
   - compatibility with `jaxopt`/`optax` optimization loops (planned)
 
 ## Near-term work items
@@ -62,3 +62,4 @@ This repository is being consolidated from an earlier “LX” umbrella reposito
 - Add manufactured-solution tests (sphere / cylinder / torus variants)
 - Add exterior vacuum solves consistent with interior solutions
 - Provide a small library of example geometries (tokamak / stellarator / mirror / knot)
+- Explore fast multipole / kernel-acceleration for large boundary sets

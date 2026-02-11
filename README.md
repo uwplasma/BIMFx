@@ -84,6 +84,11 @@ See `docs/tracing.md`.
 
 JAX-based tracing is available for large batches (see `docs/performance.md`).
 
+## Differentiable core (JAX)
+
+JAX-native MFS/BIM solvers are available for differentiable workflows:
+`solve_mfs_jax`, `solve_bim_jax`. See `docs/differentiable.md`.
+
 ## Flux-Surface Finding (FCI)
 
 An FCI-inspired anisotropic diffusion solver is available in `bimfx.fci`, along with
@@ -99,6 +104,14 @@ Validation helpers for boundary residuals and divergence checks are in
 
 Example scripts live in `examples/`, with bundled input datasets in `inputs/`.
 See `docs/examples.md` and `docs/io.md`.
+
+## CLI and pipeline
+
+```bash
+JAX_ENABLE_X64=1 bimfx --input inputs/knot_tube.csv --normals inputs/knot_tube_normals.csv --method mfs --validate
+```
+
+See `docs/workflow.md` for configuration-based pipelines.
 
 For a paper-ready validation report across all datasets:
 
