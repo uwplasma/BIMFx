@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -16,6 +16,8 @@ class BoundaryData:
     points: np.ndarray  # (N,3)
     normals: np.ndarray | None
     metadata: dict[str, Any]
+    schema_version: str = "1.0"
+    provenance: dict[str, Any] = field(default_factory=dict)
 
     @classmethod
     def from_points(
@@ -23,8 +25,24 @@ class BoundaryData:
         points: np.ndarray,
         normals: np.ndarray | None = None,
         metadata: dict[str, Any] | None = None,
+        schema_version: str = "1.0",
+        provenance: dict[str, Any] | None = None,
     ) -> "BoundaryData":
-        return cls(points=np.asarray(points), normals=normals, metadata=metadata or {})
+        return cls(
+            points=np.asarray(points),
+            normals=normals,
+            metadata=metadata or {},
+            schema_version=schema_version,
+            provenance=provenance or {},
+        )
+
+
+def _provenance(source: str, path: str | Path | None = None, **kwargs: Any) -> dict[str, Any]:
+    prov: dict[str, Any] = {"source": source}
+    if path is not None:
+        prov["path"] = str(Path(path))
+    prov.update(kwargs)
+    return prov
 
 
 def _normalize_normals(normals: np.ndarray) -> np.ndarray:
@@ -87,6 +105,7 @@ def load_boundary_csv(points_path: str | Path, normals_path: str | Path | None =
         points=points,
         normals=normals,
         metadata={"source": "csv", "normals_flipped": bool(flipped)},
+        provenance=_provenance("csv", points_path, normals_path=str(normals_path) if normals_path else None),
     )
 
 
@@ -185,6 +204,7 @@ def boundary_from_vmec_wout(
             "lasym": bool(lasym),
             "normals_flipped": bool(flipped),
         },
+        provenance=_provenance("vmec_wout", wout_path, s=float(s), ntheta=int(ntheta), nphi=int(nphi)),
     )
 
 
@@ -248,6 +268,7 @@ def boundary_from_slam_npz(
             "nphi": int(phi.size),
             "normals_flipped": bool(flipped),
         },
+        provenance=_provenance("slam_npz", path, ntheta=int(theta.size), nphi=int(phi.size)),
     )
 
 
@@ -270,6 +291,7 @@ def boundary_from_sflm_npy(path: str | Path) -> BoundaryData:
         points=points,
         normals=normals,
         metadata={"source": "sflm_npy", "normals_flipped": bool(flipped)},
+        provenance=_provenance("sflm_npy", path),
     )
 
 
@@ -314,6 +336,7 @@ def boundary_from_stl(
         points=np.asarray(points),
         normals=np.asarray(normals),
         metadata={"source": "stl", "normals_flipped": bool(flipped), "even": bool(even)},
+        provenance=_provenance("stl", path, n_points=int(n_points), even=bool(even), fix_normals=bool(fix_normals)),
     )
 
 
@@ -351,6 +374,7 @@ def boundary_from_mesh(
         points=np.asarray(points),
         normals=np.asarray(normals),
         metadata={"source": "mesh", "normals_flipped": bool(flipped), "even": bool(even)},
+        provenance=_provenance("mesh", path, n_points=int(n_points), even=bool(even), fix_normals=bool(fix_normals)),
     )
 
 
@@ -376,6 +400,8 @@ def load_boundary(
                 points=data.points,
                 normals=normals,
                 metadata={**data.metadata, "normals_estimated": True},
+                schema_version=data.schema_version,
+                provenance={**data.provenance, "normals_estimated": True, "normal_k": int(normal_k)},
             )
         return data
     if fmt in {"nc"}:

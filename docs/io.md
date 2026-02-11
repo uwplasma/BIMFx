@@ -28,6 +28,15 @@ If normals are missing, you can estimate them:
 data = load_boundary("surface.csv", estimate_normals=True, normal_k=20)
 ```
 
+## Schema + provenance
+
+`BoundaryData` includes a schema version and provenance metadata:
+
+- `schema_version`: currently `1.0`
+- `provenance`: source path and loader parameters (sampling, grid sizes, etc.)
+
+This metadata makes boundary datasets reproducible in optimization pipelines.
+
 ## Sample input datasets
 
 The repository ships small reference datasets under `inputs/`:

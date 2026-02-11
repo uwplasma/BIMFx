@@ -51,6 +51,8 @@ def test_csv_roundtrip(tmp_path: Path) -> None:
     assert data.points.shape == (2, 3)
     assert data.normals is not None
     assert np.allclose(data.normals, normals)
+    assert data.schema_version == "1.0"
+    assert data.provenance.get("source") == "csv"
 
 
 def test_vmec_wout_loader(tmp_path: Path) -> None:
@@ -61,6 +63,7 @@ def test_vmec_wout_loader(tmp_path: Path) -> None:
     assert data.normals is not None
     nrm = np.linalg.norm(data.normals, axis=1)
     assert np.allclose(nrm, 1.0, atol=1e-6)
+    assert data.provenance.get("source") == "vmec_wout"
 
 
 def test_slam_npz_loader(tmp_path: Path) -> None:
@@ -124,6 +127,7 @@ def test_load_boundary_autodetect(tmp_path: Path) -> None:
 
     data = load_boundary(pts_path, normals_path=nrm_path)
     assert data.normals is not None
+    assert data.provenance.get("source") == "csv"
 
 
 def test_mesh_loader_optional(tmp_path: Path) -> None:
