@@ -35,3 +35,6 @@ fci = ["scikit-image>=0.21"]
 [project.urls]
 Homepage = "https://github.com/uwplasma/BIMFx"
 Repository = "https://github.com/uwplasma/BIMFx"
+
+[project.scripts]
+bimfx = "bimfx.cli:main"

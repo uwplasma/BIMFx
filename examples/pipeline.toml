@@ -1,0 +1,16 @@
+[boundary]
+input = "inputs/knot_tube.csv"
+normals = "inputs/knot_tube_normals.csv"
+format = "csv"
+estimate_normals = false
+subsample = 200
+
+[solve]
+method = "mfs"
+toroidal_flux = 1.0
+
+[validate]
+eps_factor = 0.02
+
+[output]
+dir = "outputs/pipeline"
