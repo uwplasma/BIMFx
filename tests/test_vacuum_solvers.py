@@ -160,3 +160,36 @@ def test_accelerated_evaluators_close_to_direct():
     B_fast = np.asarray(field_bim_fast.B(Pin))
     rel = np.linalg.norm(B_fast - B_ref) / np.maximum(1e-12, np.linalg.norm(B_ref))
     assert rel < 0.2
+
+
+def _expected_azimuthal_field(P: np.ndarray, Pin: np.ndarray, a_t: float) -> np.ndarray:
+    import jax.numpy as jnp
+
+    from bimfx.mfs.geometry import grad_azimuth_about_axis, normalize_geometry
+
+    Pj = jnp.asarray(P)
+    Pn, scinfo = normalize_geometry(Pj, verbose=False)
+    Xn = (jnp.asarray(Pin) - scinfo.center) * scinfo.scale
+    a_hat = jnp.array([0.0, 0.0, 1.0])
+    Bn = scinfo.scale * a_t * grad_azimuth_about_axis(Xn, a_hat)
+    return np.asarray(Bn)
+
+
+def test_torus_harmonic_field_matches_azimuthal():
+    _require_x64()
+    from bimfx import solve_bim, solve_mfs
+
+    P, N = _torus_point_cloud(R=3.0, r=1.0, nphi=10, ntheta=10)
+    Pin = P - 0.05 * N
+    a_t = 1.0 / (2.0 * np.pi)
+    expected = _expected_azimuthal_field(P, Pin, a_t)
+
+    field_mfs = solve_mfs(P, N, toroidal_flux=1.0)
+    Bm = np.asarray(field_mfs.B(Pin))
+    rel_mfs = np.linalg.norm(Bm - expected) / np.maximum(1e-12, np.linalg.norm(expected))
+    assert rel_mfs < 0.3
+
+    field_bim = solve_bim(P, N, toroidal_flux=1.0)
+    Bb = np.asarray(field_bim.B(Pin))
+    rel_bim = np.linalg.norm(Bb - expected) / np.maximum(1e-12, np.linalg.norm(expected))
+    assert rel_bim < 0.35
