@@ -32,6 +32,11 @@ These scripts are designed to be runnable end-to-end and demonstrate common work
   [examples/validation_report.py](https://github.com/uwplasma/BIMFx/blob/main/examples/validation_report.py)
   - Optional `--coarse-to-fine` for parameter tuning sweeps.
 
+## Figures
+
+- Generate gallery figures (boundary clouds, field lines, Poincaré, BIM vs MFS):
+  [examples/generate_gallery_figures.py](https://github.com/uwplasma/BIMFx/blob/main/examples/generate_gallery_figures.py)
+
 ## Notebooks
 
 - Quickstart notebook:

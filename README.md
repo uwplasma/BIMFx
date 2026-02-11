@@ -79,6 +79,7 @@ BIMFx includes utilities to load boundary point clouds from common sources:
 
 See `docs/io.md` and `examples/convert_boundary.py`.
 For preprocessing and consistent normal orientation rules, see `docs/preprocessing.md`.
+For recipes that cover meshes, point clouds, and VMEC, see `docs/your_geometry.md`.
 
 ## Field-Line Tracing
 
@@ -110,6 +111,12 @@ CI compares validation baselines (`baselines/validation_report/summary.csv`) to 
 ![k_nn sweep](docs/_static/validation_report/sweep_k_nn.png)
 ![subsample sweep](docs/_static/validation_report/sweep_subsample.png)
 ![lambda_reg sweep](docs/_static/validation_report/sweep_lambda_reg.png)
+
+## Gallery
+
+![Knot boundary](docs/_static/gallery/boundary_knot.png)
+![VMEC boundary](docs/_static/gallery/boundary_vmec.png)
+![Poincaré section](docs/_static/gallery/poincare_torus.png)
 
 ## Examples and datasets
 

@@ -20,9 +20,11 @@ quickstart
 theory
 io
 preprocessing
+your_geometry
 tracing
 fci
 validation
+gallery
 performance
 examples
 references
