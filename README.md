@@ -21,8 +21,10 @@ BIMFx is under active development. The current public API focuses on:
 
 - Solving for `B(X)` inside a boundary given `(points, normals)`
 - Providing both **MFS** and **BIM** implementations behind a simple interface
+- Differentiable JAX solvers with implicit differentiation for linear solves
+- Barnes-Hut accelerated evaluation for large point sets
 
-Planned functionality (field-line tracing, flux-surface fitting/FCI, manufactured solutions, optimization utilities, VMEC/wout + STL I/O, exterior solves) is tracked in the docs roadmap.
+Planned functionality (manufactured solutions, optimization utilities, exterior solves) is tracked in the docs roadmap.
 
 ## Install
 
@@ -76,6 +78,7 @@ BIMFx includes utilities to load boundary point clouds from common sources:
 - STL meshes (optional; requires `trimesh`)
 
 See `docs/io.md` and `examples/convert_boundary.py`.
+For preprocessing and consistent normal orientation rules, see `docs/preprocessing.md`.
 
 ## Field-Line Tracing
 
@@ -88,6 +91,7 @@ JAX-based tracing is available for large batches (see `docs/performance.md`).
 
 JAX-native MFS/BIM solvers are available for differentiable workflows:
 `solve_mfs_jax`, `solve_bim_jax`. See `docs/differentiable.md`.
+Linear solves use custom VJP (implicit differentiation) for stable gradients.
 
 ## Flux-Surface Finding (FCI)
 
@@ -99,6 +103,13 @@ See `docs/fci.md`.
 
 Validation helpers for boundary residuals and divergence checks are in
 `bimfx.validation`. See `docs/validation.md`.
+CI compares validation baselines (`baselines/validation_report/summary.csv`) to catch regressions.
+
+### Validation figures (bundled)
+
+![k_nn sweep](docs/_static/validation_report/sweep_k_nn.png)
+![subsample sweep](docs/_static/validation_report/sweep_subsample.png)
+![lambda_reg sweep](docs/_static/validation_report/sweep_lambda_reg.png)
 
 ## Examples and datasets
 
@@ -108,7 +119,8 @@ See `docs/examples.md` and `docs/io.md`.
 ## CLI and pipeline
 
 ```bash
-JAX_ENABLE_X64=1 bimfx --input inputs/knot_tube.csv --normals inputs/knot_tube_normals.csv --method mfs --validate
+JAX_ENABLE_X64=1 bimfx --input inputs/knot_tube.csv --normals inputs/knot_tube_normals.csv --method mfs --validate \
+  --k-nn 24 --lambda-reg 1e-6 --acceleration barnes-hut
 ```
 
 See `docs/workflow.md` for configuration-based pipelines.

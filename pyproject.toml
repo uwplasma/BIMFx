@@ -10,7 +10,7 @@ where = ["src"]
 
 [project]
 name = "bimfx"
-version = "0.1.0"
+version = "0.2.0"
 description = "Vacuum magnetic field solvers (BIM + MFS) for Laplace's equation in arbitrary 3D geometry."
 readme = "README.md"
 authors = [
