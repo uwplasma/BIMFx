@@ -71,3 +71,4 @@ JAX_ENABLE_X64=1 bimfx --input inputs/knot_tube.csv --normals inputs/knot_tube_n
 ## Notebook
 
 See the quickstart notebook in `notebooks/quickstart.ipynb`.
+See the optimization tutorial in `notebooks/jax_optimization.ipynb`.
