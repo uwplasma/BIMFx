@@ -5,6 +5,20 @@ from typing import Any, Callable
 import numpy as np
 
 
+def offset_points_inward(
+    P: np.ndarray,
+    N: np.ndarray,
+    *,
+    eps_factor: float = 0.02,
+) -> np.ndarray:
+    """Offset boundary points inward by eps_factor * median radius."""
+    P = np.asarray(P, dtype=float)
+    N = np.asarray(N, dtype=float)
+    center = np.mean(P, axis=0)
+    scale = np.median(np.linalg.norm(P - center[None, :], axis=1))
+    return P - eps_factor * scale * N
+
+
 def boundary_normal_residual(
     B: Callable[[Any], Any],
     P: np.ndarray,
@@ -23,6 +37,23 @@ def boundary_normal_residual(
         return np.abs(ndot)
     denom = np.linalg.norm(Bv, axis=1)
     return np.abs(ndot) / np.maximum(1e-30, denom)
+
+
+def relative_boundary_residual(
+    B: Callable[[Any], Any],
+    P: np.ndarray,
+    N: np.ndarray,
+    *,
+    eps_factor: float = 0.02,
+) -> np.ndarray:
+    """Compute |n·B| normalized by median |B| on inward-offset points."""
+    Pin = offset_points_inward(P, N, eps_factor=eps_factor)
+    Bv = np.asarray(B(Pin))
+    if Bv.shape == (3,):
+        Bv = Bv[None, :]
+    ndot = np.sum(N * Bv, axis=1)
+    scale = np.median(np.linalg.norm(Bv, axis=1))
+    return np.abs(ndot) / max(scale, 1e-30)
 
 
 def divergence_on_grid(

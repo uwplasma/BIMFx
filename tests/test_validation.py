@@ -5,7 +5,12 @@ os.environ.setdefault("JAX_ENABLE_X64", "1")
 import numpy as np
 import pytest
 
-from bimfx.validation import boundary_normal_residual, divergence_on_grid
+from bimfx.validation import (
+    boundary_normal_residual,
+    divergence_on_grid,
+    offset_points_inward,
+    relative_boundary_residual,
+)
 
 
 def _require_x64() -> None:
@@ -60,6 +65,30 @@ def test_divergence_uniform_field_is_zero():
     zs = np.linspace(-1.0, 1.0, 12)
     divB = divergence_on_grid(B, xs, ys, zs)
     assert np.max(np.abs(divB)) < 1e-12
+
+
+def test_relative_boundary_residual_unit_normal_field():
+    rng = np.random.default_rng(0)
+    P = rng.normal(size=(100, 3))
+    P /= np.linalg.norm(P, axis=1, keepdims=True)
+    N = P.copy()
+
+    def B(points: np.ndarray) -> np.ndarray:
+        return points
+
+    res = relative_boundary_residual(B, P, N, eps_factor=0.01)
+    assert np.allclose(np.median(res), 1.0, atol=0.2)
+
+
+def test_offset_points_inward_reduces_radius():
+    rng = np.random.default_rng(0)
+    P = rng.normal(size=(100, 3))
+    P /= np.linalg.norm(P, axis=1, keepdims=True)
+    N = P.copy()
+    Pin = offset_points_inward(P, N, eps_factor=0.05)
+    r0 = np.median(np.linalg.norm(P, axis=1))
+    r1 = np.median(np.linalg.norm(Pin, axis=1))
+    assert r1 < r0
 
 
 def test_solver_boundary_residual_small():
