@@ -26,7 +26,7 @@ def boundary_normal_residual(
     *,
     normalize: bool = True,
 ) -> np.ndarray:
-    """Compute |n·B| (optionally normalized by |B|) on boundary points."""
+    """Compute abs(n·B) (optionally normalized by ||B||) on boundary points."""
     P = np.asarray(P, dtype=float)
     N = np.asarray(N, dtype=float)
     Bv = np.asarray(B(P))
@@ -46,7 +46,7 @@ def relative_boundary_residual(
     *,
     eps_factor: float = 0.02,
 ) -> np.ndarray:
-    """Compute |n·B| normalized by median |B| on inward-offset points."""
+    """Compute abs(n·B) normalized by median ||B|| on inward-offset points."""
     Pin = offset_points_inward(P, N, eps_factor=eps_factor)
     Bv = np.asarray(B(Pin))
     if Bv.shape == (3,):
