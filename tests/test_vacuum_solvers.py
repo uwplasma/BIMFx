@@ -38,6 +38,28 @@ def _torus_point_cloud(R: float, r: float, nphi: int, ntheta: int) -> tuple[np.n
     return P, N
 
 
+def _ellipsoid_point_cloud(a: float, b: float, c: float, nphi: int, ntheta: int) -> tuple[np.ndarray, np.ndarray]:
+    phis = np.linspace(0.0, 2.0 * np.pi, nphi, endpoint=False)
+    thetas = np.linspace(0.0, np.pi, ntheta, endpoint=True)
+    points = []
+    normals = []
+    for phi in phis:
+        cphi, sphi = np.cos(phi), np.sin(phi)
+        for th in thetas:
+            sth, cth = np.sin(th), np.cos(th)
+            x = a * sth * cphi
+            y = b * sth * sphi
+            z = c * cth
+            nx = x / (a * a)
+            ny = y / (b * b)
+            nz = z / (c * c)
+            n = np.array([nx, ny, nz])
+            n /= np.linalg.norm(n)
+            points.append([x, y, z])
+            normals.append(n.tolist())
+    return np.asarray(points, dtype=float), np.asarray(normals, dtype=float)
+
+
 def test_mfs_blob_returns_zero_field():
     _require_x64()
     from bimfx import solve_mfs
@@ -77,3 +99,38 @@ def test_bim_torus_enforces_tangency():
     B = np.asarray(field.B(Pin))
     ndot = np.sum(N * B, axis=1)
     assert np.sqrt(np.mean(ndot**2)) < 1e-10
+
+
+def test_bim_cg_solver_runs():
+    _require_x64()
+    from bimfx import solve_bim
+    from bimfx.vacuum.solve import SolveOptions
+
+    P, N = _torus_point_cloud(R=3.0, r=1.0, nphi=8, ntheta=8)
+    options = SolveOptions(solver="cg", cg_maxiter=200, cg_tol=1e-8, verbose=False)
+    field = solve_bim(P, N, toroidal_flux=1.0, options=options)
+    Pin = P - 0.05 * N
+    B = np.asarray(field.B(Pin))
+    assert np.isfinite(B).all()
+
+
+def test_mfs_ellipsoid_zero_field():
+    _require_x64()
+    from bimfx import solve_mfs
+
+    P, N = _ellipsoid_point_cloud(2.0, 1.2, 0.8, nphi=16, ntheta=12)
+    field = solve_mfs(P, N, toroidal_flux=None)
+    Pin = P - 0.05 * N
+    B = np.asarray(field.B(Pin))
+    assert np.max(np.linalg.norm(B, axis=1)) < 1e-10
+
+
+def test_bim_ellipsoid_zero_field():
+    _require_x64()
+    from bimfx import solve_bim
+
+    P, N = _ellipsoid_point_cloud(2.0, 1.2, 0.8, nphi=16, ntheta=12)
+    field = solve_bim(P, N, toroidal_flux=None)
+    Pin = P - 0.05 * N
+    B = np.asarray(field.B(Pin))
+    assert np.max(np.linalg.norm(B, axis=1)) < 1e-10

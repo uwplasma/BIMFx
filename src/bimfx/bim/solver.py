@@ -2,10 +2,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any
+from functools import partial
 
 import jax
 import jax.numpy as jnp
 from jax import jit, vmap
+from jax.scipy.sparse.linalg import cg as jax_cg
 import numpy as np
 
 from bimfx.mfs.geometry import (
@@ -56,7 +58,7 @@ def build_Kprime(P: jnp.ndarray, N: jnp.ndarray, W: jnp.ndarray, h: jnp.ndarray,
     return n_dot_grad * W[None, :]
 
 
-@jit
+@partial(jit, static_argnames=("solver", "preconditioner"))
 def solve_density_sigma(
     P: jnp.ndarray,
     N: jnp.ndarray,
@@ -66,13 +68,33 @@ def solve_density_sigma(
     *,
     lambda_reg: float,
     clip_factor: float,
+    solver: str = "direct",
+    cg_tol: float = 1e-8,
+    cg_maxiter: int = 500,
+    preconditioner: str = "jacobi",
 ) -> jnp.ndarray:
     """Solve ``(-1/2 I + K') σ + λ σ = -g`` for σ."""
     npts = P.shape[0]
     Kprime = build_Kprime(P, N, W, h, clip_factor=clip_factor)
     I = jnp.eye(npts, dtype=P.dtype)
     A = -0.5 * I + Kprime + lambda_reg * I
-    return jnp.linalg.solve(A, -g)
+    if solver == "direct":
+        return jnp.linalg.solve(A, -g)
+
+    def matvec(x):
+        return A @ x
+
+    if preconditioner == "jacobi":
+        diag = jnp.diag(A)
+
+        def M(x):
+            return x / jnp.maximum(diag, 1e-30)
+
+    else:
+        M = None
+
+    sigma, _info = jax_cg(matvec, -g, tol=cg_tol, maxiter=cg_maxiter, M=M)
+    return sigma
 
 
 def make_single_layer_evaluators(
@@ -115,6 +137,10 @@ def solve_bim_neumann(
     lambda_reg: float = 1e-6,
     clip_factor: float = 0.2,
     harmonic_coeffs: tuple[float, float] | None = None,
+    solver: str = "direct",
+    cg_tol: float = 1e-8,
+    cg_maxiter: int = 500,
+    preconditioner: str = "jacobi",
     verbose: bool = True,
 ) -> BIMSolution:
     """BIM-based Neumann solve enforcing ``n·B = 0`` on the boundary point cloud."""
@@ -159,7 +185,19 @@ def solve_bim_neumann(
         a = jnp.zeros((2,), dtype=jnp.float64)
         g = jnp.zeros((P.shape[0],), dtype=jnp.float64)
 
-    sigma = solve_density_sigma(P, N, W, h, g, lambda_reg=lambda_reg, clip_factor=clip_factor)
+    sigma = solve_density_sigma(
+        P,
+        N,
+        W,
+        h,
+        g,
+        lambda_reg=lambda_reg,
+        clip_factor=clip_factor,
+        solver=solver,
+        cg_tol=cg_tol,
+        cg_maxiter=cg_maxiter,
+        preconditioner=preconditioner,
+    )
     phi_s_fn, grad_s_fn = make_single_layer_evaluators(P, W, sigma, h_min=h_min, clip_factor=clip_factor)
 
     def B_mv_fn(X):
@@ -177,6 +215,7 @@ def solve_bim_neumann(
         "k_nn": int(k_nn),
         "lambda_reg": float(lambda_reg),
         "clip_factor": float(clip_factor),
+        "solver": str(solver),
         "harmonic_coeffs": [float(a[0]), float(a[1])],
         "geometry_kind": str(kind),
         "normals_flipped": bool(flipped),

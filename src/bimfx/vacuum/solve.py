@@ -19,6 +19,10 @@ class SolveOptions:
     source_factor: float = 2.0
     lambda_reg: float = 1e-6
     clip_factor: float = 0.2  # BIM near-singular regularization
+    solver: Literal["direct", "cg"] = "direct"
+    cg_tol: float = 1e-8
+    cg_maxiter: int = 500
+    preconditioner: Literal["jacobi", "none"] = "jacobi"
     verbose: bool = True
 
 
@@ -97,7 +101,10 @@ def solve_bim(
         lambda_reg=options.lambda_reg,
         clip_factor=options.clip_factor,
         harmonic_coeffs=harmonic_coeffs,
+        solver=options.solver,
+        cg_tol=options.cg_tol,
+        cg_maxiter=options.cg_maxiter,
+        preconditioner=options.preconditioner,
         verbose=options.verbose,
     )
     return VacuumField(phi=solution.phi, B=solution.B, metadata=solution.metadata)
-
