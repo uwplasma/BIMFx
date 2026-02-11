@@ -6,6 +6,7 @@ from typing import Any
 
 import numpy as np
 from scipy.io import netcdf_file
+from scipy.spatial import cKDTree
 
 
 @dataclass(frozen=True)
@@ -15,6 +16,15 @@ class BoundaryData:
     points: np.ndarray  # (N,3)
     normals: np.ndarray | None
     metadata: dict[str, Any]
+
+    @classmethod
+    def from_points(
+        cls,
+        points: np.ndarray,
+        normals: np.ndarray | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> "BoundaryData":
+        return cls(points=np.asarray(points), normals=normals, metadata=metadata or {})
 
 
 def _normalize_normals(normals: np.ndarray) -> np.ndarray:
@@ -29,6 +39,29 @@ def _ensure_outward(points: np.ndarray, normals: np.ndarray) -> tuple[np.ndarray
     if flipped:
         normals = -normals
     return normals, flipped
+
+
+def estimate_normals(points: np.ndarray, *, k: int = 20) -> np.ndarray:
+    """Estimate normals from a raw point cloud using local PCA."""
+    pts = np.asarray(points, dtype=float)
+    if pts.ndim != 2 or pts.shape[1] != 3:
+        raise ValueError(f"Expected points shape (N,3); got {pts.shape}")
+    k_eff = min(k + 1, len(pts))
+    tree = cKDTree(pts)
+    _, idx = tree.query(pts, k=k_eff)
+    normals = np.empty_like(pts)
+    for i in range(len(pts)):
+        neigh = pts[idx[i, 1:]]
+        if neigh.shape[0] < 3:
+            normals[i] = np.array([0.0, 0.0, 1.0])
+            continue
+        cov = np.cov((neigh - neigh.mean(axis=0)).T)
+        _w, v = np.linalg.eigh(cov)
+        n = v[:, 0]
+        n = n / np.maximum(np.linalg.norm(n), 1e-30)
+        normals[i] = n
+    normals, _ = _ensure_outward(pts, normals)
+    return _normalize_normals(normals)
 
 
 def load_boundary_csv(points_path: str | Path, normals_path: str | Path | None = None) -> BoundaryData:
@@ -282,6 +315,78 @@ def boundary_from_stl(
         normals=np.asarray(normals),
         metadata={"source": "stl", "normals_flipped": bool(flipped), "even": bool(even)},
     )
+
+
+def boundary_from_mesh(
+    path: str | Path,
+    *,
+    n_points: int = 2048,
+    even: bool = False,
+    fix_normals: bool = True,
+) -> BoundaryData:
+    """Sample a surface mesh into points + normals (STL/PLY/OBJ/etc.)."""
+    try:
+        import trimesh as tm
+    except Exception as exc:  # pragma: no cover - optional dependency
+        raise ImportError("trimesh is required for mesh sampling. Install with `pip install trimesh`.") from exc
+
+    mesh = tm.load_mesh(str(path))
+    if not isinstance(mesh, tm.Trimesh):
+        mesh = mesh.dump().sum()
+    if fix_normals:
+        mesh.rezero()
+        try:
+            mesh.fix_normals()
+        except Exception:
+            pass
+    if even:
+        points = tm.sample.sample_surface_even(mesh, int(n_points))
+        _, face_idx = mesh.nearest.on_surface(points)
+    else:
+        points, face_idx = tm.sample.sample_surface(mesh, int(n_points))
+    normals = mesh.face_normals[face_idx]
+    normals = _normalize_normals(normals)
+    normals, flipped = _ensure_outward(points, normals)
+    return BoundaryData(
+        points=np.asarray(points),
+        normals=np.asarray(normals),
+        metadata={"source": "mesh", "normals_flipped": bool(flipped), "even": bool(even)},
+    )
+
+
+def load_boundary(
+    path: str | Path,
+    *,
+    normals_path: str | Path | None = None,
+    format: str | None = None,
+    estimate_normals: bool = False,
+    normal_k: int = 20,
+    n_points: int = 2048,
+    even: bool = False,
+) -> BoundaryData:
+    """Load boundary data with format autodetection."""
+    path = Path(path)
+    fmt = (format or path.suffix.lstrip(".")).lower()
+
+    if fmt in {"csv"}:
+        data = load_boundary_csv(path, normals_path)
+        if data.normals is None and estimate_normals:
+            normals = estimate_normals(data.points, k=normal_k)
+            return BoundaryData(
+                points=data.points,
+                normals=normals,
+                metadata={**data.metadata, "normals_estimated": True},
+            )
+        return data
+    if fmt in {"nc"}:
+        return boundary_from_vmec_wout(path)
+    if fmt in {"npz"}:
+        return boundary_from_slam_npz(path)
+    if fmt in {"npy"}:
+        return boundary_from_sflm_npy(path)
+    if fmt in {"stl", "ply", "obj"}:
+        return boundary_from_mesh(path, n_points=n_points, even=even)
+    raise ValueError(f"Unsupported boundary format: {fmt}")
 
 
 def _periodic_diff(values: np.ndarray, coord: np.ndarray, axis: int) -> np.ndarray:

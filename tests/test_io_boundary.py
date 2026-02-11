@@ -8,8 +8,11 @@ from scipy.io import netcdf_file
 from bimfx.io import (
     boundary_from_sflm_npy,
     boundary_from_slam_npz,
+    boundary_from_mesh,
     boundary_from_stl,
     boundary_from_vmec_wout,
+    estimate_normals,
+    load_boundary,
     load_boundary_csv,
     save_boundary_csv,
 )
@@ -98,5 +101,36 @@ def test_stl_loader_optional(tmp_path: Path) -> None:
     mesh.export(stl_path)
 
     data = boundary_from_stl(stl_path, n_points=200, even=False)
+    assert data.points.shape[0] == 200
+    assert data.normals is not None
+
+
+def test_estimate_normals_on_sphere():
+    rng = np.random.default_rng(0)
+    P = rng.normal(size=(100, 3))
+    P /= np.linalg.norm(P, axis=1, keepdims=True)
+    N = estimate_normals(P, k=10)
+    dots = np.sum(P * N, axis=1)
+    assert np.median(dots) > 0.5
+
+
+def test_load_boundary_autodetect(tmp_path: Path) -> None:
+    points = np.array([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]])
+    normals = np.array([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]])
+    pts_path = tmp_path / "p.csv"
+    nrm_path = tmp_path / "p_normals.csv"
+    np.savetxt(pts_path, points, delimiter=",", header="x,y,z", comments="")
+    np.savetxt(nrm_path, normals, delimiter=",", header="nx,ny,nz", comments="")
+
+    data = load_boundary(pts_path, normals_path=nrm_path)
+    assert data.normals is not None
+
+
+def test_mesh_loader_optional(tmp_path: Path) -> None:
+    tm = pytest.importorskip("trimesh")
+    mesh = tm.creation.icosphere(subdivisions=1, radius=1.0)
+    mesh_path = tmp_path / "sphere.ply"
+    mesh.export(mesh_path)
+    data = boundary_from_mesh(mesh_path, n_points=200, even=False)
     assert data.points.shape[0] == 200
     assert data.normals is not None
