@@ -67,6 +67,30 @@ Outputs include:
 
 The `sweep_subsample.png` plot provides a coarse-to-fine convergence view.
 
+To run a coarse-to-fine sweep over `(k_nn, lambda_reg)`:
+
+```bash
+JAX_ENABLE_X64=1 python examples/validation_report.py --coarse-to-fine --outdir outputs/validation_report
+```
+
+### Embedded figures
+
+![k_nn sweep](_static/validation_report/sweep_k_nn.png)
+
+![subsample sweep](_static/validation_report/sweep_subsample.png)
+
+![lambda_reg sweep](_static/validation_report/sweep_lambda_reg.png)
+
+## Baseline regression checks
+
+CI compares the generated report against a stored baseline to catch regressions:
+
+```bash
+python scripts/compare_validation_baseline.py \
+  --baseline baselines/validation_report/summary.csv \
+  --current outputs/validation_report/summary.csv
+```
+
 ## Source code
 
 - Validation helpers: [src/bimfx/validation.py](https://github.com/uwplasma/BIMFx/blob/main/src/bimfx/validation.py)

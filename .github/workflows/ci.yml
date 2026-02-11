@@ -50,6 +50,8 @@ jobs:
           python -m pip install -e ".[dev,plot]"
       - name: Generate report
         run: python examples/validation_report.py --outdir outputs/validation_report --ci
+      - name: Compare baseline
+        run: python scripts/compare_validation_baseline.py --baseline baselines/validation_report/summary.csv --current outputs/validation_report/summary.csv
       - name: Upload report
         uses: actions/upload-artifact@v4
         with:

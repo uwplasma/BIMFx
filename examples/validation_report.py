@@ -15,6 +15,7 @@ import numpy as np
 
 from bimfx import solve_bim, solve_mfs
 from bimfx.io import boundary_from_vmec_wout, load_boundary_csv
+from bimfx.sweep import coarse_to_fine_sweep
 from bimfx.validation import relative_boundary_residual, summary_stats
 from bimfx.vacuum.solve import SolveOptions
 
@@ -101,6 +102,9 @@ def main() -> None:
     p.add_argument("--k-nn", type=int, nargs="+", default=[12, 24, 36, 48, 64, 96])
     p.add_argument("--subsample", type=int, nargs="+", default=[150, 300, 600, 900])
     p.add_argument("--lambda-reg", type=float, nargs="+", default=[1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3])
+    p.add_argument("--coarse-to-fine", action="store_true", help="Run coarse-to-fine sweep for BIM parameters.")
+    p.add_argument("--coarse-levels", type=int, default=2)
+    p.add_argument("--refine-factor", type=int, default=2)
     p.add_argument("--ci", action="store_true", help="Use a small CI-friendly sweep.")
     p.add_argument("--datasets", nargs="*", default=None, help="Subset of datasets by name.")
     args = p.parse_args()
@@ -153,10 +157,9 @@ def main() -> None:
 
     if args.ci or os.environ.get("CI"):
         args.subsample_base = min(args.subsample_base, 300)
-        args.k_nn = [12, 24, 48]
-        args.subsample = [150, 300]
+        args.k_nn = [12, 24, 36]
+        args.subsample = [120, 240]
         args.lambda_reg = [1e-6, 1e-4]
-        datasets = [d for d in datasets if d.name in {"wout_precise_QA", "wout_SLAM_6_coils"}]
         datasets = [
             DatasetConfig(
                 name="wout_precise_QA",
@@ -164,10 +167,12 @@ def main() -> None:
                 loader=lambda: _load_wout("wout_precise_QA.nc", ntheta=24, nphi=48),
             ),
             DatasetConfig(
-                name="wout_SLAM_6_coils",
+                name="wout_LandremanSenguptaPlunk_5.3",
                 kind="torus",
-                loader=lambda: _load_csv("wout_SLAM_6_coils"),
+                loader=lambda: _load_csv("wout_LandremanSenguptaPlunk_5.3"),
             ),
+            DatasetConfig(name="sflm_rm4", kind="mirror", loader=lambda: _load_csv("sflm_rm4")),
+            DatasetConfig(name="knot_tube", kind="other", loader=lambda: _load_csv("knot_tube")),
         ]
 
     if args.datasets:
@@ -349,6 +354,46 @@ def main() -> None:
     plot_sweep("bim_k_nn", "k_nn", "k_nn", outdir / "sweep_k_nn.png")
     plot_sweep("bim_subsample", "subsample", "subsample", outdir / "sweep_subsample.png")
     plot_sweep("bim_lambda_reg", "lambda_reg", "lambda_reg", outdir / "sweep_lambda_reg.png", logx=True)
+
+    if args.coarse_to_fine:
+        coarse_csv = outdir / "coarse_to_fine.csv"
+        with coarse_csv.open("w", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow(["dataset", "best_k_nn", "best_lambda_reg", "best_rms"])
+            for ds in datasets:
+                P, N = ds.loader()
+                P, N = _subsample(P, N, args.subsample_base)
+                toroidal_flux = 1.0 if ds.kind == "torus" else None
+
+                def evaluate(params: dict[str, float]) -> float:
+                    k_nn = int(params["k_nn"])
+                    if k_nn >= P.shape[0]:
+                        return float("inf")
+                    opts = SolveOptions(k_nn=k_nn, lambda_reg=float(params["lambda_reg"]), verbose=False)
+                    stats = _evaluate(
+                        "bim",
+                        P,
+                        N,
+                        toroidal_flux=toroidal_flux,
+                        options=opts,
+                        eps_factor=args.eps_factor,
+                    )
+                    return float(stats["rms"])
+
+                result = coarse_to_fine_sweep(
+                    {"k_nn": args.k_nn, "lambda_reg": args.lambda_reg},
+                    evaluate,
+                    levels=int(args.coarse_levels),
+                    refine_factor=int(args.refine_factor),
+                )
+                writer.writerow(
+                    [
+                        ds.name,
+                        int(result.best_params["k_nn"]),
+                        float(result.best_params["lambda_reg"]),
+                        result.best_value,
+                    ]
+                )
 
     summary_md = outdir / "summary.md"
     with summary_md.open("w") as f:

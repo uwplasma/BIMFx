@@ -40,4 +40,4 @@ myst_enable_extensions = [
 
 html_theme = "furo"
 html_title = "BIMFx"
-
+html_static_path = ["_static"]
