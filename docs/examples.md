@@ -36,8 +36,12 @@ These scripts are designed to be runnable end-to-end and demonstrate common work
 
 - Generate gallery figures (boundary clouds, field lines, Poincaré, BIM vs MFS):
   [examples/generate_gallery_figures.py](https://github.com/uwplasma/BIMFx/blob/main/examples/generate_gallery_figures.py)
+- Generate benchmark gallery (timing/accuracy tables + plots):
+  [examples/generate_benchmark_gallery.py](https://github.com/uwplasma/BIMFx/blob/main/examples/generate_benchmark_gallery.py)
 
 ## Notebooks
 
 - Quickstart notebook:
   [notebooks/quickstart.ipynb](https://github.com/uwplasma/BIMFx/blob/main/notebooks/quickstart.ipynb)
+- JAX optimization tutorial:
+  [notebooks/jax_optimization.ipynb](https://github.com/uwplasma/BIMFx/blob/main/notebooks/jax_optimization.ipynb)

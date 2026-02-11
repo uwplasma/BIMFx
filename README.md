@@ -118,6 +118,12 @@ CI compares validation baselines (`baselines/validation_report/summary.csv`) to 
 ![VMEC boundary](docs/_static/gallery/boundary_vmec.png)
 ![Poincaré section](docs/_static/gallery/poincare_torus.png)
 
+## Benchmarks
+
+![Boundary grid](docs/_static/benchmark/boundary_grid.png)
+![Solve time](docs/_static/benchmark/benchmark_time.png)
+![Boundary residual](docs/_static/benchmark/benchmark_rms.png)
+
 ## Examples and datasets
 
 Example scripts live in `examples/`, with bundled input datasets in `inputs/`.

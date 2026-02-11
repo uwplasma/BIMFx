@@ -36,6 +36,7 @@ field = solve_mfs(points, normals, options=options)
 ```
 
 Tighter `accel_theta` improves accuracy but reduces speed.
+For background on hierarchical acceleration and FMM, see `docs/references.md`.
 
 ## Kernel caching
 

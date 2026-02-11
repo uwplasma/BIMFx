@@ -25,6 +25,7 @@ tracing
 fci
 validation
 gallery
+benchmarks
 performance
 examples
 references
