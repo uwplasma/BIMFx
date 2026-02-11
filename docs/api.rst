@@ -30,6 +30,9 @@ Public interface
    bimfx.objectives.divergence_objective
    bimfx.pipeline.run_pipeline
    bimfx.pipeline.PipelineResult
+   bimfx.sweep.coarse_to_fine_sweep
+   bimfx.sweep.SweepRecord
+   bimfx.sweep.SweepResult
    bimfx.tracing.poincare_sections
    bimfx.tracing.FieldlineTrace
    bimfx.tracing.PoincareSection
@@ -63,3 +66,4 @@ Utilities
 
    bimfx.fieldline.trace_fieldline_rk4
    bimfx.utils.MFSKernelCache
+   bimfx.utils.BarnesHut3D

@@ -17,7 +17,7 @@ field = solve_mfs_jax(P, N, harmonic_coeffs=(1.0, 0.0))
 loss = boundary_residual_objective(field.B, P, N)
 
 grad_P = jax.grad(lambda Pvar: boundary_residual_objective(
-    solve_bim_jax(Pvar, N, harmonic_coeffs=(1.0, 0.0), stop_gradient=True).B, Pvar, N))(P)
+    solve_bim_jax(Pvar, N, harmonic_coeffs=(1.0, 0.0)).B, Pvar, N))(P)
 ```
 
 ## Notes
@@ -25,5 +25,7 @@ grad_P = jax.grad(lambda Pvar: boundary_residual_objective(
 - The JAX solvers are dense and intended for moderate problem sizes.
 - Multivalued toroidal components are supported via `harmonic_coeffs=(a_t, 0.0)`.
 - BIM JAX gradients can be sensitive to regularization; increase `lambda_reg` for stability.
-- Use `stop_gradient=True` to avoid differentiating through the linear solve when needed.
+- Linear solves use implicit differentiation (custom VJP) for stable gradients.
+- Use `stop_gradient=True` only if you want to disable gradients through the solve.
+- `stop_gradient_knn=True` (default) avoids non-smooth gradients from kNN radius selection.
 - For toroidal domains, pass `harmonic_coeffs=(a_t, 0.0)` to specify toroidal flux.

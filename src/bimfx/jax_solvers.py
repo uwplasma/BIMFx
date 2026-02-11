@@ -5,8 +5,7 @@ from typing import Any
 
 import jax
 import jax.numpy as jnp
-import jax.scipy.linalg as jsp_linalg
-
+from bimfx.jax_linalg import solve_linear, solve_spd
 from bimfx.mfs.geometry import grad_azimuth_about_axis
 
 
@@ -42,10 +41,7 @@ def _solve_alpha_ls(A: jnp.ndarray, W: jnp.ndarray, g: jnp.ndarray, lam: float) 
     ATg = Aw.T @ gw
     NE = ATA + (lam**2) * jnp.eye(A.shape[1], dtype=A.dtype)
     rhs = -ATg
-    L = jnp.linalg.cholesky(NE)
-    y = jsp_linalg.solve_triangular(L, rhs, lower=True)
-    alpha = jsp_linalg.solve_triangular(L.T, y, lower=False)
-    return alpha
+    return solve_spd(NE, rhs)
 
 
 @jax.tree_util.register_pytree_node_class
@@ -151,6 +147,7 @@ def solve_mfs_jax(
     harmonic_coeffs: tuple[float, float] | None = None,
     a_hat: Array | None = None,
     stop_gradient: bool = False,
+    stop_gradient_knn: bool = True,
 ) -> MFSJaxField:
     """JAX-native MFS solve (dense, differentiable)."""
     P = jnp.asarray(points, dtype=jnp.float64)
@@ -158,7 +155,9 @@ def solve_mfs_jax(
     N = N / jnp.maximum(1e-30, jnp.linalg.norm(N, axis=1, keepdims=True))
 
     Pn, center, scale = _normalize_geometry_jax(P)
-    rk = jax.lax.stop_gradient(_knn_radius_jax(Pn, k_nn))
+    rk = _knn_radius_jax(Pn, k_nn)
+    if stop_gradient_knn:
+        rk = jax.lax.stop_gradient(rk)
     W = jnp.pi * rk**2
     Yn = Pn + source_factor * rk[:, None] * N
 
@@ -206,6 +205,7 @@ def solve_bim_jax(
     harmonic_coeffs: tuple[float, float] | None = None,
     a_hat: Array | None = None,
     stop_gradient: bool = False,
+    stop_gradient_knn: bool = True,
 ) -> BIMJaxField:
     """JAX-native BIM solve (dense, differentiable)."""
     P = jnp.asarray(points, dtype=jnp.float64)
@@ -213,7 +213,9 @@ def solve_bim_jax(
     N = N / jnp.maximum(1e-30, jnp.linalg.norm(N, axis=1, keepdims=True))
 
     Pn, center, scale = _normalize_geometry_jax(P)
-    rk_n = jax.lax.stop_gradient(_knn_radius_jax(Pn, k_nn))
+    rk_n = _knn_radius_jax(Pn, k_nn)
+    if stop_gradient_knn:
+        rk_n = jax.lax.stop_gradient(rk_n)
     Wn = jnp.pi * rk_n**2
     W = Wn / (scale**2)
     h = rk_n / scale
@@ -250,7 +252,7 @@ def solve_bim_jax(
         g = scale * jnp.sum(N * (a_t * grad_t), axis=1)
 
     A = -0.5 * jnp.eye(npts, dtype=P.dtype) + Kprime + lambda_reg * jnp.eye(npts, dtype=P.dtype)
-    sigma = jnp.linalg.solve(A, -g)
+    sigma = solve_linear(A, -g)
     if stop_gradient:
         sigma = jax.lax.stop_gradient(sigma)
     return BIMJaxField(

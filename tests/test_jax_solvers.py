@@ -75,7 +75,6 @@ def test_mfs_jax_gradients_finite():
             k_nn=12,
             lambda_reg=1e-2,
             harmonic_coeffs=(1.0, 0.0),
-            stop_gradient=True,
             a_hat=jnp.array([0.0, 0.0, 1.0]),
         )
         return boundary_residual_objective(field.B, P_var, Nj)
@@ -84,14 +83,29 @@ def test_mfs_jax_gradients_finite():
     assert jnp.isfinite(grad).all()
 
 
-def test_bim_jax_forward_finite():
+def test_bim_jax_gradients_finite():
     _require_x64()
+    import jax
     import jax.numpy as jnp
 
     from bimfx.jax_solvers import solve_bim_jax
 
-    P, N = _torus_point_cloud(R=3.0, r=1.0, nphi=6, ntheta=6)
-    field = solve_bim_jax(P, N, k_nn=12, lambda_reg=1e-4, clip_factor=0.3, harmonic_coeffs=(1.0, 0.0))
-    Pin = jnp.asarray(P - 0.05 * N)
-    B = jnp.asarray(field.B(Pin))
-    assert jnp.isfinite(B).all()
+    P, N = _sphere_points(30)
+    Pj = jnp.asarray(P)
+    Nj = jnp.asarray(N)
+
+    def objective(P_var):
+        field = solve_bim_jax(
+            P_var,
+            Nj,
+            k_nn=8,
+            lambda_reg=1e-2,
+            clip_factor=0.2,
+            harmonic_coeffs=None,
+        )
+        Pin = P_var - 0.05 * Nj
+        B = field.B(Pin)
+        return jnp.sum(B**2)
+
+    grad = jax.grad(objective)(Pj)
+    assert jnp.isfinite(grad).all()
